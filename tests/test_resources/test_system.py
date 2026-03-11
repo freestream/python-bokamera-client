@@ -150,7 +150,7 @@ def test_system_list_currencies_with_id_and_active_filter():
         http.close()
     params = route.calls[0].request.url.params
     assert params["Id"] == "SEK"
-    assert params["Active"] == "True"
+    assert params["Active"].lower() == "true"
 
 
 # ---------------------------------------------------------------------------

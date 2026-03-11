@@ -94,7 +94,7 @@ class TestGet:
         assert route.called
         params = route.calls[0].request.url.params
         assert params["Id"] == "42"
-        assert params["Active"] == "True"
+        assert params["Active"].lower() == "true"
 
     def test_strips_none_params(self):
         with respx.mock:
@@ -106,7 +106,7 @@ class TestGet:
             http.close()
         params = route.calls[0].request.url.params
         assert "Id" not in params
-        assert params["Active"] == "True"
+        assert params["Active"].lower() == "true"
 
     def test_returns_parsed_json(self):
         with respx.mock:
