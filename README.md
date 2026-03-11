@@ -1,4 +1,4 @@
-# bokamera
+# BokaMera
 
 Typed Python 3.13 client library for the [BokaMera](https://www.bokamera.se) booking API.
 
