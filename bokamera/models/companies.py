@@ -150,17 +150,17 @@ class CompanyOwnerResponse:
     """A company owner entry.
 
     Attributes:
-        id: UUID of the owner account.
+        id: Numeric ID of the owner account.
         name: Display name of the owner.
     """
 
-    id: UUID | None = None
+    id: int | None = None
     name: str | None = None
 
     @classmethod
     def from_dict(cls, d: dict) -> CompanyOwnerResponse:
         """Construct a CompanyOwnerResponse from a raw API response dict."""
-        return cls(id=_uuid(d.get("Id")), name=d.get("Name"))
+        return cls(id=d.get("Id"), name=d.get("Name"))
 
 
 @dataclass(slots=True)
@@ -173,7 +173,7 @@ class CompanyUserResponse:
         lastname: Administrator's last name.
         email: Administrator's email address.
         phone: Administrator's phone number.
-        resource_id: UUID of the resource record linked to this administrator.
+        resource_id: ID of the resource record linked to this administrator.
         roles: List of role names assigned to this administrator.
         active: Whether this administrator account is currently active.
         worker_id: Optional external worker identifier.
@@ -185,7 +185,7 @@ class CompanyUserResponse:
     lastname: str | None = None
     email: str | None = None
     phone: str | None = None
-    resource_id: UUID | None = None
+    resource_id: int | None = None
     roles: list[str] = field(default_factory=list)
     active: bool = True
     worker_id: str | None = None
@@ -200,7 +200,7 @@ class CompanyUserResponse:
             lastname=d.get("Lastname"),
             email=d.get("Email"),
             phone=d.get("Phone"),
-            resource_id=_uuid(d.get("ResourceId")),
+            resource_id=d.get("ResourceId"),
             roles=d.get("Roles", []),
             active=d.get("Active", True),
             worker_id=d.get("WorkerId"),

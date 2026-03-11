@@ -525,7 +525,7 @@ class TestArticleResponse:
 class TestResourceModels:
     def test_resource_response_from_dict(self):
         d = {
-            "Id": CUSTOMER_UUID_STR,
+            "Id": 42,
             "Name": "John Smith",
             "Description": "Senior therapist",
             "Active": True,
@@ -534,7 +534,7 @@ class TestResourceModels:
             "EmailNotification": True,
         }
         r = ResourceResponse.from_dict(d)
-        assert isinstance(r.id, UUID)
+        assert r.id == 42
         assert r.name == "John Smith"
         assert r.email == "john@spa.se"
         assert r.email_notification is True
@@ -552,13 +552,14 @@ class TestResourceModels:
             "Description": "Massage therapists",
             "Active": True,
             "Resources": [
-                {"Id": CUSTOMER_UUID_STR, "Name": "John Smith"}
+                {"Id": 7, "Name": "John Smith"}
             ],
         }
         rt = ResourceTypeResponse.from_dict(d)
         assert rt.id == 1
         assert rt.name == "Therapist"
         assert len(rt.resources) == 1
+        assert rt.resources[0].id == 7
         assert rt.resources[0].name == "John Smith"
 
 

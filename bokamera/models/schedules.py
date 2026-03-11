@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import date, time
 from uuid import UUID
 
-from .common import _uuid
+from .common import _date, _uuid
 
 
 @dataclass(slots=True)
@@ -32,7 +32,7 @@ class ScheduleDate:
     def from_dict(cls, d: dict) -> ScheduleDate:
         """Construct a ScheduleDate from a raw API response dict."""
         return cls(
-            date=date.fromisoformat(d["Date"]) if d.get("Date") else None,
+            date=_date(d.get("Date")),
             start_time=time.fromisoformat(d["StartTime"]) if d.get("StartTime") else None,
             end_time=time.fromisoformat(d["EndTime"]) if d.get("EndTime") else None,
         )
@@ -133,8 +133,8 @@ class RecurringScheduleResponse:
             description=d.get("Description"),
             active=d.get("Active", True),
             time_interval=d.get("TimeInterval"),
-            valid_from=date.fromisoformat(d["ValidFrom"]) if d.get("ValidFrom") else None,
-            valid_to=date.fromisoformat(d["ValidTo"]) if d.get("ValidTo") else None,
+            valid_from=_date(d.get("ValidFrom")),
+            valid_to=_date(d.get("ValidTo")),
             start_time=time.fromisoformat(d["StartTime"]) if d.get("StartTime") else None,
             end_time=time.fromisoformat(d["EndTime"]) if d.get("EndTime") else None,
             days_of_week=d.get("DaysOfWeek", []),

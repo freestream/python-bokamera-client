@@ -19,7 +19,7 @@ class ResourceResponse:
     """A bookable resource such as a staff member, room, or piece of equipment.
 
     Attributes:
-        id: UUID of the resource.
+        id: Numeric ID of the resource.
         name: Display name of the resource.
         description: Longer description of the resource.
         active: Whether the resource is currently available for booking.
@@ -37,7 +37,7 @@ class ResourceResponse:
         exceptions: Time exceptions (e.g. holidays) for this resource.
     """
 
-    id: UUID | None = None
+    id: int | None = None
     name: str | None = None
     description: str | None = None
     active: bool = True
@@ -58,7 +58,7 @@ class ResourceResponse:
     def from_dict(cls, d: dict) -> ResourceResponse:
         """Construct a ResourceResponse from a raw API response dict."""
         return cls(
-            id=_uuid(d.get("Id")),
+            id=d.get("Id"),
             name=d.get("Name"),
             description=d.get("Description"),
             active=d.get("Active", True),
@@ -126,7 +126,7 @@ class ResourceTimeExceptionResponse:
         color: Hex colour used to highlight the exception in the calendar.
         block_time: Whether this exception actively blocks new bookings.
         is_recurring: Whether this is a recurring exception.
-        resource_ids: UUIDs of all resources affected by this exception.
+        resource_ids: IDs of all resources affected by this exception.
     """
 
     id: int | None = None
@@ -140,7 +140,7 @@ class ResourceTimeExceptionResponse:
     color: str | None = None
     block_time: bool = True
     is_recurring: bool = False
-    resource_ids: list[UUID] = field(default_factory=list)
+    resource_ids: list[int] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, d: dict) -> ResourceTimeExceptionResponse:
@@ -157,7 +157,7 @@ class ResourceTimeExceptionResponse:
             color=d.get("Color"),
             block_time=d.get("BlockTime", True),
             is_recurring=d.get("IsRecurring", False),
-            resource_ids=[_uuid(r) for r in d.get("ResourceIds", []) if r],  # type: ignore[misc]
+            resource_ids=[r for r in d.get("ResourceIds", []) if r is not None],
         )
 
 
@@ -166,17 +166,17 @@ class CollidingBookingResponse:
     """Bookings and resources that would collide with a proposed time exception.
 
     Attributes:
-        resource_ids: UUIDs of resources that have conflicting bookings.
+        resource_ids: IDs of resources that have conflicting bookings.
         bookings: Booking dicts that overlap with the proposed exception window.
     """
 
-    resource_ids: list[UUID] = field(default_factory=list)
+    resource_ids: list[int] = field(default_factory=list)
     bookings: list[dict] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, d: dict) -> CollidingBookingResponse:
         """Construct a CollidingBookingResponse from a raw API response dict."""
         return cls(
-            resource_ids=[_uuid(r) for r in d.get("ResourceIds", []) if r],  # type: ignore[misc]
+            resource_ids=[r for r in d.get("ResourceIds", []) if r is not None],
             bookings=d.get("Bookings", []),
         )

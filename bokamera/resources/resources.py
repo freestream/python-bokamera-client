@@ -32,7 +32,7 @@ class ResourceResource:
         self,
         *,
         company_id: UUID | str | None = None,
-        id_: UUID | str | None = None,
+        id_: int | None = None,
         active: bool | None = None,
         include_exceptions: bool | None = None,
         exceptions_from: date | None = None,
@@ -45,7 +45,7 @@ class ResourceResource:
 
         Args:
             company_id: Target company (defaults to the client's company).
-            id_: Filter to a single resource by UUID.
+            id_: Filter to a single resource by ID.
             active: When set, filter by active/inactive status.
             include_exceptions: Include time exception details in each resource.
             exceptions_from: Start of the date range for included exceptions.
@@ -59,7 +59,7 @@ class ResourceResource:
         """
         params = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
-            "Id": str(id_) if id_ else None,
+            "Id": id_,
             "Active": active,
             "IncludeExceptions": include_exceptions,
             "ExceptionsQueryFromDate": exceptions_from.isoformat() if exceptions_from else None,
@@ -130,11 +130,11 @@ class ResourceResource:
         }
         return ResourceResponse.from_dict(self._http.post("/resource", body))
 
-    def update(self, resource_id: UUID | str, *, company_id: UUID | str | None = None, **kwargs: object) -> ResourceResponse:
+    def update(self, resource_id: int, *, company_id: UUID | str | None = None, **kwargs: object) -> ResourceResponse:
         """Update an existing resource.
 
         Args:
-            resource_id: UUID of the resource to update.
+            resource_id: ID of the resource to update.
             company_id: Target company (defaults to the client's company).
             **kwargs: Resource fields to update (e.g. ``Name``, ``Color``, ``Active``).
 
@@ -144,11 +144,11 @@ class ResourceResource:
         body = {"CompanyId": str(company_id) if company_id else self._http.default_company_id, **kwargs}
         return ResourceResponse.from_dict(self._http.put(f"/resource/{resource_id}", body))
 
-    def delete(self, resource_id: UUID | str, *, force: bool = False, company_id: UUID | str | None = None) -> ResourceResponse:
+    def delete(self, resource_id: int, *, force: bool = False, company_id: UUID | str | None = None) -> ResourceResponse:
         """Delete a resource.
 
         Args:
-            resource_id: UUID of the resource to delete.
+            resource_id: ID of the resource to delete.
             force: When ``True``, delete even if the resource has existing bookings.
             company_id: Target company (defaults to the client's company).
 
@@ -256,7 +256,7 @@ class ResourceResource:
         self,
         *,
         company_id: UUID | str | None = None,
-        resource_ids: list[UUID | str] | None = None,
+        resource_ids: list[int] | None = None,
         start: datetime | None = None,
         end: datetime | None = None,
         is_recurring: bool | None = None,
@@ -268,7 +268,7 @@ class ResourceResource:
 
         Args:
             company_id: Target company (defaults to the client's company).
-            resource_ids: Filter to exceptions for these resource UUIDs.
+            resource_ids: Filter to exceptions for these resource IDs.
             start: Return exceptions starting on or after this datetime.
             end: Return exceptions starting on or before this datetime.
             is_recurring: Filter to recurring or one-off exceptions.
@@ -281,7 +281,7 @@ class ResourceResource:
         """
         params = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
-            "ResourceIds": [str(r) for r in resource_ids] if resource_ids else None,
+            "ResourceIds": resource_ids,
             "TimeExceptionStart": start.isoformat() if start else None,
             "TimeExceptionEnd": end.isoformat() if end else None,
             "IsRecurring": is_recurring,
@@ -299,7 +299,7 @@ class ResourceResource:
         *,
         from_: datetime,
         to: datetime,
-        resource_ids: list[UUID | str],
+        resource_ids: list[int],
         from_time: time | None = None,
         to_time: time | None = None,
         days_of_week: list[int] | None = None,
@@ -319,7 +319,7 @@ class ResourceResource:
         Args:
             from_: Start datetime of the exception period.
             to: End datetime of the exception period.
-            resource_ids: UUIDs of the resources to apply the exception to.
+            resource_ids: IDs of the resources to apply the exception to.
             from_time: Daily start time for recurring exceptions.
             to_time: Daily end time for recurring exceptions.
             days_of_week: Days of the week the exception recurs on (0 = Monday).
@@ -341,7 +341,7 @@ class ResourceResource:
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             "From": from_.isoformat(),
             "To": to.isoformat(),
-            "ResourceIds": [str(r) for r in resource_ids],
+            "ResourceIds": resource_ids,
             "FromTime": from_time.isoformat() if from_time else None,
             "ToTime": to_time.isoformat() if to_time else None,
             "DaysOfWeek": days_of_week,
@@ -387,7 +387,7 @@ class ResourceResource:
     def get_colliding_events(
         self,
         *,
-        resource_ids: list[UUID | str],
+        resource_ids: list[int],
         from_: datetime,
         to: datetime,
         from_time: time | None = None,
@@ -400,7 +400,7 @@ class ResourceResource:
         """Find bookings that would collide with a proposed time exception.
 
         Args:
-            resource_ids: UUIDs of the resources to check for collisions.
+            resource_ids: IDs of the resources to check for collisions.
             from_: Start of the proposed exception period.
             to: End of the proposed exception period.
             from_time: Daily start time for recurring exception windows.
@@ -415,7 +415,7 @@ class ResourceResource:
         """
         params = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
-            "ResourceIds": [str(r) for r in resource_ids],
+            "ResourceIds": resource_ids,
             "From": from_.isoformat(),
             "To": to.isoformat(),
             "FromTime": from_time.isoformat() if from_time else None,

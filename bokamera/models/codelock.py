@@ -81,8 +81,8 @@ class CodeLockAmidoDaxSettingResponse:
         updated: Timestamp of the most recent configuration update.
     """
 
-    instance_id: UUID | None = None
-    partner_id: UUID | None = None
+    instance_id: str | None = None
+    partner_id: str | None = None
     created: datetime | None = None
     updated: datetime | None = None
 
@@ -90,8 +90,8 @@ class CodeLockAmidoDaxSettingResponse:
     def from_dict(cls, d: dict) -> CodeLockAmidoDaxSettingResponse:
         """Construct a CodeLockAmidoDaxSettingResponse from a raw API response dict."""
         return cls(
-            instance_id=_uuid(d.get("InstanceId")),
-            partner_id=_uuid(d.get("PartnerId")),
+            instance_id=d.get("InstanceId"),
+            partner_id=d.get("PartnerId"),
             created=_dt(d.get("Created")),
             updated=_dt(d.get("Updated")),
         )

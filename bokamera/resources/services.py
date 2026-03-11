@@ -319,9 +319,11 @@ class ServiceResource:
         *,
         from_: datetime,
         to: datetime,
-        resources: list[str] | None = None,
+        resources: list[dict] | None = None,
         number_of_resources: int | None = None,
         show_per_resource: bool | None = None,
+        inside_search_interval: bool | None = None,
+        duration: int | None = None,
         article_ids: list[int] | None = None,
         company_id: UUID | str | None = None,
     ) -> AvailableTimesResponse:
@@ -331,9 +333,13 @@ class ServiceResource:
             service_id: ID of the service to query.
             from_: Start of the search window.
             to: End of the search window.
-            resources: Restrict results to specific resource UUIDs.
-            number_of_resources: Minimum number of resources required per slot.
-            show_per_resource: When ``True``, return availability per resource.
+            resources: Restrict to specific resources per resource type.
+                Each entry is a dict with ``ResourceTypeId`` (int) and ``ResourceId`` (int).
+            number_of_resources: Number of resources to book per resource type (default 1).
+            show_per_resource: When ``True``, return availability broken down per resource.
+            inside_search_interval: When ``True``, both start and end time must fall inside the
+                search interval (default ``False`` — only start time needs to be inside).
+            duration: Duration to book in minutes; must be within the service's min/max range.
             article_ids: Article IDs to include when checking slot availability.
             company_id: Target company (defaults to the client's company).
 
@@ -347,9 +353,53 @@ class ServiceResource:
             "Resources": resources,
             "NumberOfResources": number_of_resources,
             "ShowPerResource": show_per_resource,
+            "InsideSearchInterval": inside_search_interval,
+            "Duration": duration,
             "ArticleIds": article_ids,
         }
         return AvailableTimesResponse.from_dict(self._http.get(f"/services/{service_id}/availabletimes", params))
+
+    def get_next_free_time(
+        self,
+        service_id: int,
+        *,
+        from_: datetime,
+        to: datetime,
+        resources: list[dict] | None = None,
+        number_of_resources: int | None = None,
+        show_per_resource: bool | None = None,
+        duration: int | None = None,
+        article_ids: list[int] | None = None,
+        company_id: UUID | str | None = None,
+    ) -> AvailableTimesResponse:
+        """Find the next available time slot for a service from a given start datetime.
+
+        Args:
+            service_id: ID of the service to query.
+            from_: Start of the search window.
+            to: End of the search window (optional; defaults to one year ahead if omitted).
+            resources: Restrict to specific resources per resource type.
+                Each entry is a dict with ``ResourceTypeId`` (int) and ``ResourceId`` (int).
+            number_of_resources: Number of resources to book per resource type (default 1).
+            show_per_resource: When ``True``, return availability broken down per resource.
+            duration: Duration to book in minutes; must be within the service's min/max range.
+            article_ids: Article IDs to include when checking slot availability.
+            company_id: Target company (defaults to the client's company).
+
+        Returns:
+            An :class:`~bokamera.models.services.AvailableTimesResponse` with the next free slot.
+        """
+        params = {
+            "CompanyId": str(company_id) if company_id else self._http.default_company_id,
+            "From": from_.isoformat(),
+            "To": to.isoformat(),
+            "Resources": resources,
+            "NumberOfResources": number_of_resources,
+            "ShowPerResource": show_per_resource,
+            "Duration": duration,
+            "ArticleIds": article_ids,
+        }
+        return AvailableTimesResponse.from_dict(self._http.get(f"/services/{service_id}/nextfreetime", params))
 
     def get_available_times_grouped(
         self,
@@ -357,7 +407,7 @@ class ServiceResource:
         *,
         from_: datetime,
         to: datetime,
-        resources: list[str] | None = None,
+        resources: list[dict] | None = None,
         number_of_resources: int | None = None,
         company_id: UUID | str | None = None,
     ) -> dict:
@@ -367,8 +417,9 @@ class ServiceResource:
             service_id: ID of the service to query.
             from_: Start of the search window.
             to: End of the search window.
-            resources: Restrict results to specific resource UUIDs.
-            number_of_resources: Minimum number of resources required per slot.
+            resources: Restrict to specific resources per resource type.
+                Each entry is a dict with ``ResourceTypeId`` (int) and ``ResourceId`` (int).
+            number_of_resources: Number of resources to book per resource type (default 1).
             company_id: Target company (defaults to the client's company).
 
         Returns:

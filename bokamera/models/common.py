@@ -10,7 +10,7 @@ geographic data.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any, Generic, TypeVar
 from uuid import UUID
 
@@ -30,6 +30,27 @@ def _uuid(v: str | UUID | None) -> UUID | None:
     if v is None:
         return None
     return UUID(str(v)) if not isinstance(v, UUID) else v
+
+
+def _date(v: str | date | None) -> date | None:
+    """Coerce an ISO-8601 string to a ``date`` instance.
+
+    Accepts both plain date strings (``'2026-03-11'``) and datetime strings
+    (``'2026-03-11T00:00:00'``) — the time component is discarded.
+
+    Args:
+        v: Value to coerce.
+
+    Returns:
+        A :class:`~datetime.date` instance, or ``None`` if *v* is ``None``.
+    """
+    if v is None:
+        return None
+    if isinstance(v, date) and not isinstance(v, datetime):
+        return v
+    s = str(v)
+    # Strip time component if present so date.fromisoformat() can parse it.
+    return date.fromisoformat(s[:10])
 
 
 def _dt(v: str | datetime | None) -> datetime | None:

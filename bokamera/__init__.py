@@ -11,6 +11,7 @@ Quick start::
             print(svc.name, svc.prices)
 """
 
+from .auth import OAuthToken, fetch_token, refresh_access_token
 from .client import BokaMeraClient
 from .exceptions import (
     BokaMeraAuthError,
@@ -24,6 +25,9 @@ from .exceptions import (
 
 __all__ = [
     "BokaMeraClient",
+    "OAuthToken",
+    "fetch_token",
+    "refresh_access_token",
     "BokaMeraError",
     "BokaMeraHTTPError",
     "BokaMeraAuthError",

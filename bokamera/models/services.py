@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime, time
 from uuid import UUID
 
-from .common import CustomFieldValue, _dt, _uuid
+from .common import CustomFieldValue, _date, _dt, _uuid
 
 
 @dataclass(slots=True)
@@ -58,8 +58,8 @@ class ServicePriceResponse:
             currency_id=d.get("CurrencyId"),
             vat=d.get("VAT"),
             category=d.get("Category"),
-            from_date=date.fromisoformat(d["From"]) if d.get("From") else None,
-            to_date=date.fromisoformat(d["To"]) if d.get("To") else None,
+            from_date=_date(d.get("From")),
+            to_date=_date(d.get("To")),
             from_time=time.fromisoformat(d["FromTime"]) if d.get("FromTime") else None,
             to_time=time.fromisoformat(d["ToTime"]) if d.get("ToTime") else None,
             days_of_week=d.get("DaysOfWeek", []),

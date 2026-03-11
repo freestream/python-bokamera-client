@@ -12,6 +12,7 @@ from __future__ import annotations
 from uuid import UUID
 
 from ._client import BokaMeraHTTPClient
+from .auth import OAuthToken, fetch_token, refresh_access_token
 from .resources.articles import ArticleResource
 from .resources.billing import BillingResource
 from .resources.bookings import BookingResource
@@ -37,27 +38,32 @@ class BokaMeraClient:
     """
     Synchronous BokaMera API client.
 
-    Usage::
+    Supports two authentication flows:
 
-        client = BokaMeraClient(api_key="your-key", company_id="uuid-here")
+    **Username / password (recommended)**::
 
-        # List upcoming bookings
-        result = client.bookings.list(booking_start=datetime.now())
-
-        # Get available times for a service
-        times = client.services.get_available_times(
-            service_id=42,
-            from_=datetime(2026, 3, 10),
-            to=datetime(2026, 3, 17),
+        client = BokaMeraClient(
+            api_key="57e1e02a-...",
+            company_id="c218794e-...",
+            username="admin@example.com",
+            password="secret",
         )
 
-        # Create a booking
-        booking = client.bookings.create(
-            from_=datetime(2026, 3, 11, 10, 0),
-            to=datetime(2026, 3, 11, 11, 0),
-            service_id=42,
-            customer={"Firstname": "Anna", "Lastname": "Svensson", "Email": "anna@example.com"},
+    **Pre-fetched OAuth2 token**::
+
+        from bokamera.auth import fetch_token
+
+        token = fetch_token("admin@example.com", "secret")
+        client = BokaMeraClient(
+            api_key="57e1e02a-...",
+            company_id="c218794e-...",
+            access_token=token.access_token,
         )
+
+    When ``username`` and ``password`` are provided the library automatically
+    fetches a Bearer token from the Keycloak identity provider before making
+    the first API call.  Use :meth:`refresh_token` to renew the token before
+    it expires, or call :meth:`login` to re-authenticate at any time.
     """
 
     def __init__(
@@ -66,26 +72,95 @@ class BokaMeraClient:
         company_id: UUID | str | None = None,
         base_url: str = "https://api.bokamera.se",
         timeout: float = 30.0,
+        *,
+        username: str | None = None,
+        password: str | None = None,
+        access_token: str | None = None,
     ) -> None:
         """Create a new BokaMera API client.
 
         Args:
-            api_key: BokaMera API key used for all requests.
+            api_key: BokaMera API key sent as the ``x-api-key`` header.
             company_id: Optional default company UUID.  When provided it is
                 automatically included in every API call that accepts a
-                ``CompanyId`` parameter so it does not need to be supplied
-                on each individual call.
+                ``CompanyId`` parameter.
             base_url: Override for the API base URL (defaults to the
                 production endpoint).
             timeout: Per-request HTTP timeout in seconds.
+            username: BokaMera admin username (email).  Requires ``password``.
+                When both are provided the library fetches a Bearer token
+                automatically.
+            password: BokaMera admin password.  Requires ``username``.
+            access_token: Pre-fetched OAuth2 Bearer token.  Use this if you
+                manage token acquisition outside the library.
+
+        Raises:
+            BokaMeraAuthError: If ``username``/``password`` are provided and
+                authentication fails.
+            ValueError: If only one of ``username``/``password`` is provided.
         """
+        if (username is None) != (password is None):
+            raise ValueError("Both 'username' and 'password' must be provided together.")
+
+        self._oauth_token: OAuthToken | None = None
+
+        if username and password:
+            self._oauth_token = fetch_token(username, password)
+            access_token = self._oauth_token.access_token
+
         self._http = BokaMeraHTTPClient(
             api_key=api_key,
             company_id=UUID(str(company_id)) if company_id else None,
             base_url=base_url,
             timeout=timeout,
+            access_token=access_token,
         )
         self._init_resources()
+
+    # ── Authentication helpers ────────────────────────────────────────────────
+
+    def login(self, username: str, password: str) -> OAuthToken:
+        """Authenticate and update the client with a new Bearer token.
+
+        Use this to (re-)authenticate after construction, for example when the
+        current token has expired and no refresh token is available.
+
+        Args:
+            username: BokaMera admin username (email).
+            password: BokaMera admin password.
+
+        Returns:
+            The newly obtained :class:`~bokamera.auth.OAuthToken`.
+
+        Raises:
+            BokaMeraAuthError: If authentication fails.
+        """
+        self._oauth_token = fetch_token(username, password)
+        self._http.set_access_token(self._oauth_token.access_token)
+        return self._oauth_token
+
+    def refresh_token(self) -> OAuthToken:
+        """Refresh the current access token using the stored refresh token.
+
+        Returns:
+            The renewed :class:`~bokamera.auth.OAuthToken`.
+
+        Raises:
+            ValueError: If no OAuth token (and thus no refresh token) is stored.
+            BokaMeraAuthError: If the refresh token has expired or is rejected.
+        """
+        if self._oauth_token is None:
+            raise ValueError(
+                "No OAuth token stored.  Call login() or pass username/password at construction."
+            )
+        self._oauth_token = refresh_access_token(self._oauth_token)
+        self._http.set_access_token(self._oauth_token.access_token)
+        return self._oauth_token
+
+    @property
+    def oauth_token(self) -> OAuthToken | None:
+        """The current OAuth token, or ``None`` if not authenticated via OAuth."""
+        return self._oauth_token
 
     def _init_resources(self) -> None:
         """Instantiate all resource namespaces and attach them to the client."""

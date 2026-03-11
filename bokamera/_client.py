@@ -40,9 +40,10 @@ def _clean(params: dict) -> dict:
 class BokaMeraHTTPClient:
     """Low-level synchronous HTTP client wrapping httpx.
 
-    Handles authentication via the ``x-api-key`` header, serialises query
-    parameters and request bodies, and maps non-2xx responses to the
-    appropriate :class:`~bokamera.exceptions.BokaMeraHTTPError` subclass.
+    Handles authentication via the ``x-api-key`` header and an optional OAuth2
+    Bearer token, serialises query parameters and request bodies, and maps
+    non-2xx responses to the appropriate
+    :class:`~bokamera.exceptions.BokaMeraHTTPError` subclass.
 
     Args:
         api_key: BokaMera API key sent as the ``x-api-key`` header.
@@ -50,6 +51,8 @@ class BokaMeraHTTPClient:
             accepts a ``CompanyId`` parameter.
         base_url: Override for the API base URL.
         timeout: Request timeout in seconds.
+        access_token: OAuth2 Bearer token.  When provided it is sent as
+            ``Authorization: Bearer <token>`` on every request.
     """
 
     def __init__(
@@ -58,15 +61,28 @@ class BokaMeraHTTPClient:
         company_id: UUID | None = None,
         base_url: str = _BASE_URL,
         timeout: float = 30.0,
+        access_token: str | None = None,
     ) -> None:
         self._api_key = api_key
         self._company_id = company_id
         self._base_url = base_url.rstrip("/")
+        self._timeout = timeout
+        headers: dict[str, str] = {"x-api-key": api_key, "Accept": "application/json"}
+        if access_token:
+            headers["Authorization"] = f"Bearer {access_token}"
         self._client = httpx.Client(
             base_url=self._base_url,
-            headers={"x-api-key": api_key, "Accept": "application/json"},
+            headers=headers,
             timeout=timeout,
         )
+
+    def set_access_token(self, access_token: str) -> None:
+        """Update the Bearer token used for subsequent requests.
+
+        Args:
+            access_token: New OAuth2 access token.
+        """
+        self._client.headers["Authorization"] = f"Bearer {access_token}"
 
     def _raise_for_status(self, response: httpx.Response) -> None:
         """Raise the appropriate exception for a non-2xx response.
@@ -234,6 +250,8 @@ class AsyncBokaMeraHTTPClient:
             accepts a ``CompanyId`` parameter.
         base_url: Override for the API base URL.
         timeout: Request timeout in seconds.
+        access_token: OAuth2 Bearer token.  When provided it is sent as
+            ``Authorization: Bearer <token>`` on every request.
     """
 
     def __init__(
@@ -242,15 +260,28 @@ class AsyncBokaMeraHTTPClient:
         company_id: UUID | None = None,
         base_url: str = _BASE_URL,
         timeout: float = 30.0,
+        access_token: str | None = None,
     ) -> None:
         self._api_key = api_key
         self._company_id = company_id
         self._base_url = base_url.rstrip("/")
+        self._timeout = timeout
+        headers: dict[str, str] = {"x-api-key": api_key, "Accept": "application/json"}
+        if access_token:
+            headers["Authorization"] = f"Bearer {access_token}"
         self._client = httpx.AsyncClient(
             base_url=self._base_url,
-            headers={"x-api-key": api_key, "Accept": "application/json"},
+            headers=headers,
             timeout=timeout,
         )
+
+    def set_access_token(self, access_token: str) -> None:
+        """Update the Bearer token used for subsequent requests.
+
+        Args:
+            access_token: New OAuth2 access token.
+        """
+        self._client.headers["Authorization"] = f"Bearer {access_token}"
 
     def _raise_for_status(self, response: httpx.Response) -> None:
         """Raise the appropriate exception for a non-2xx response.

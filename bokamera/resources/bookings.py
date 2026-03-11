@@ -44,10 +44,25 @@ class BookingResource:
         customer_id: UUID | str | None = None,
         booking_start: datetime | None = None,
         booking_end: datetime | None = None,
+        created_from: datetime | None = None,
+        created_to: datetime | None = None,
+        cancellation_code: str | None = None,
         company_bookings: bool | None = None,
-        include_resources: bool | None = None,
+        include_booked_resource_types: bool | None = None,
         include_custom_fields: bool | None = None,
+        include_custom_field_values: bool | None = None,
         include_payment_log: bool | None = None,
+        include_external_references: bool | None = None,
+        include_company_information: bool | None = None,
+        include_service_information: bool | None = None,
+        include_customer_information: bool | None = None,
+        include_invoice_address: bool | None = None,
+        include_log: bool | None = None,
+        include_checkout_log: bool | None = None,
+        include_quantity_information: bool | None = None,
+        include_calendar_export_status: bool | None = None,
+        include_status_information: bool | None = None,
+        max_limit: int | None = None,
         skip: int | None = None,
         take: int | None = None,
     ) -> QueryResponse[BookingResponse]:
@@ -60,10 +75,25 @@ class BookingResource:
             customer_id: Filter to bookings by this customer.
             booking_start: Return bookings starting on or after this datetime.
             booking_end: Return bookings starting on or before this datetime.
+            created_from: Return bookings created on or after this datetime.
+            created_to: Return bookings created on or before this datetime.
+            cancellation_code: Retrieve a specific booking by its cancellation code (no auth required).
             company_bookings: When ``True``, return all company bookings regardless of user.
-            include_resources: Include resource details in each booking.
-            include_custom_fields: Include custom field values in each booking.
+            include_booked_resource_types: Include booked resource type details in each booking.
+            include_custom_fields: Include custom field definitions in each booking.
+            include_custom_field_values: Include custom field values in each booking.
             include_payment_log: Include payment log entries in each booking.
+            include_external_references: Include external references in each booking.
+            include_company_information: Include company details in each booking.
+            include_service_information: Include service details in each booking.
+            include_customer_information: Include customer details in each booking.
+            include_invoice_address: Include invoice address in each booking.
+            include_log: Include the activity log for each booking.
+            include_checkout_log: Include checkout log entries in each booking.
+            include_quantity_information: Include quantity and price details in each booking.
+            include_calendar_export_status: Include Google Calendar sync status in each booking.
+            include_status_information: Include booking status details in each booking.
+            max_limit: Maximum number of records to retrieve (default 100).
             skip: Number of results to skip (for pagination).
             take: Maximum number of results to return.
 
@@ -72,15 +102,30 @@ class BookingResource:
         """
         params: dict = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
-            "StatusIds": service_ids,
+            "StatusIds": status_ids,
             "ServiceIds": service_ids,
             "CustomerId": str(customer_id) if customer_id else None,
             "BookingStart": booking_start.isoformat() if booking_start else None,
             "BookingEnd": booking_end.isoformat() if booking_end else None,
+            "CreatedFrom": created_from.isoformat() if created_from else None,
+            "CreatedTo": created_to.isoformat() if created_to else None,
+            "CancellationCode": cancellation_code,
             "CompanyBookings": company_bookings,
-            "IncludeResources": include_resources,
+            "IncludeBookedResourceTypes": include_booked_resource_types,
             "IncludeCustomFields": include_custom_fields,
+            "IncludeCustomFieldValues": include_custom_field_values,
             "IncludePaymentLog": include_payment_log,
+            "IncludeExternalReferences": include_external_references,
+            "IncludeCompanyInformation": include_company_information,
+            "IncludeServiceInformation": include_service_information,
+            "IncludeCustomerInformation": include_customer_information,
+            "IncludeInvoiceAddress": include_invoice_address,
+            "IncludeLog": include_log,
+            "IncludeCheckoutLog": include_checkout_log,
+            "IncludeQuantityInformation": include_quantity_information,
+            "IncludeCalendarExportStatus": include_calendar_export_status,
+            "IncludeStatusInformation": include_status_information,
+            "MaxLimit": max_limit,
             "Skip": skip,
             "Take": take,
         }
@@ -99,11 +144,19 @@ class BookingResource:
         articles: list[dict] | None = None,
         company_id: UUID | str | None = None,
         customer_id: UUID | str | None = None,
-        send_email_confirmation: bool = True,
-        send_sms_confirmation: bool = False,
+        pin_code: str | None = None,
+        send_email_confirmation: bool | None = None,
+        send_sms_confirmation: bool | None = None,
+        send_email_reminder: bool | None = None,
+        send_sms_reminder: bool | None = None,
         payment_option: PaymentOption = PaymentOption.DEFAULT_SETTING,
         custom_fields: list[dict] | None = None,
+        customer_custom_fields: list[dict] | None = None,
         rebate_code_ids: list[int] | None = None,
+        booked_comments: str | None = None,
+        comments_to_customer: str | None = None,
+        invoice_address: dict | None = None,
+        allow_booking_outside_schedules: bool = False,
     ) -> BookingResponse:
         """Create a new booking.
 
@@ -117,11 +170,19 @@ class BookingResource:
             articles: Articles (e.g. add-ons) to attach to the booking.
             company_id: Target company (defaults to the client's company).
             customer_id: UUID of an existing customer to link to the booking.
+            pin_code: PIN code required when booking on behalf of a specific customer.
             send_email_confirmation: Send an email confirmation to the customer.
             send_sms_confirmation: Send an SMS confirmation to the customer.
+            send_email_reminder: Send an email reminder to the customer.
+            send_sms_reminder: Send an SMS reminder to the customer.
             payment_option: Payment handling behaviour for this booking.
             custom_fields: Custom field values collected at booking time.
+            customer_custom_fields: Custom field values to update on the customer profile.
             rebate_code_ids: IDs of rebate codes to apply.
+            booked_comments: Internal comment (not shared with the customer).
+            comments_to_customer: Comment included in the booking confirmation to the customer.
+            invoice_address: Invoice address details for this booking.
+            allow_booking_outside_schedules: Allow booking outside schedule hours (admins only).
 
         Returns:
             The created :class:`~bokamera.models.bookings.BookingResponse`.
@@ -136,11 +197,19 @@ class BookingResource:
             "Resources": resources or [],
             "Articles": articles or [],
             "CustomerId": str(customer_id) if customer_id else None,
+            "PinCode": pin_code,
             "SendEmailConfirmation": send_email_confirmation,
             "SendSmsConfirmation": send_sms_confirmation,
+            "SendEmailReminder": send_email_reminder,
+            "SendSmsReminder": send_sms_reminder,
             "PaymentOption": int(payment_option),
             "CustomFields": custom_fields or [],
+            "CustomerCustomFields": customer_custom_fields or [],
             "RebateCodeIds": rebate_code_ids or [],
+            "BookedComments": booked_comments,
+            "CommentsToCustomer": comments_to_customer,
+            "InvoiceAddress": invoice_address,
+            "AllowBookingOutsideSchedules": allow_booking_outside_schedules,
         }
         return BookingResponse.from_dict(self._http.post("/bookings", body))
 
@@ -347,18 +416,43 @@ class BookingResource:
         """
         return self._http.put(f"/bookings/{booking_id}/refund/{payment_log_id}", {"Amount": amount})
 
-    def move_resources(self, *, resource_id: UUID | str, new_resource_id: UUID | str, test: bool = True) -> BookingResponse:
+    def move_resources(
+        self,
+        *,
+        resource_id: int,
+        new_resource_id: int,
+        test: bool = True,
+        resource_type_id: int | None = None,
+        new_resource_type_id: int | None = None,
+        booking_start: datetime | None = None,
+        booking_end: datetime | None = None,
+        company_id: UUID | str | None = None,
+    ) -> BookingResponse:
         """Move all bookings from one resource to another.
 
         Args:
-            resource_id: UUID of the source resource whose bookings should be moved.
-            new_resource_id: UUID of the target resource to move the bookings to.
+            resource_id: ID of the source resource whose bookings should be moved.
+            new_resource_id: ID of the target resource to move the bookings to.
             test: When ``True``, perform a dry-run without saving changes.
+            resource_type_id: Restrict the move to a specific resource type; if omitted all resource types are affected.
+            new_resource_type_id: Move bookings into a different resource type on the target.
+            booking_start: Only move bookings starting on or after this datetime.
+            booking_end: Only move bookings starting on or before this datetime.
+            company_id: Target company (defaults to the client's company).
 
         Returns:
             A :class:`~bokamera.models.bookings.BookingResponse` representing the outcome.
         """
-        body = {"ResourceId": str(resource_id), "NewResourceId": str(new_resource_id), "Test": test}
+        body = {
+            "CompanyId": str(company_id) if company_id else self._http.default_company_id,
+            "ResourceId": resource_id,
+            "NewResourceId": new_resource_id,
+            "Test": test,
+            "ResourceTypeId": resource_type_id,
+            "NewResourceTypeId": new_resource_type_id,
+            "BookingStart": booking_start.isoformat() if booking_start else None,
+            "BookingEnd": booking_end.isoformat() if booking_end else None,
+        }
         return BookingResponse.from_dict(self._http.put("/bookings/resources/move", body))
 
     def get_available_resources(self, booking_id: int, resource_type_id: int) -> dict:
@@ -555,6 +649,8 @@ class BookingResource:
         service_id: int | None = None,
         customer_id: UUID | str | None = None,
         company_id: UUID | str | None = None,
+        date_start: datetime | None = None,
+        date_end: datetime | None = None,
         skip: int | None = None,
         take: int | None = None,
     ) -> list[BookingUserQueueResponse]:
@@ -565,6 +661,8 @@ class BookingResource:
             service_id: Filter by service ID.
             customer_id: Filter by customer UUID.
             company_id: Target company (defaults to the client's company).
+            date_start: Return queue entries on or after this datetime (defaults to today).
+            date_end: Return queue entries on or before this datetime (defaults to all future).
             skip: Pagination offset.
             take: Maximum results to return.
 
@@ -576,6 +674,8 @@ class BookingResource:
             "UserId": str(user_id) if user_id else None,
             "ServiceId": service_id,
             "CustomerId": str(customer_id) if customer_id else None,
+            "DateStart": date_start.isoformat() if date_start else None,
+            "DateEnd": date_end.isoformat() if date_end else None,
             "Skip": skip,
             "Take": take,
         }

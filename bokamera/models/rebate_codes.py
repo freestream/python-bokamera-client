@@ -11,7 +11,7 @@ from dataclasses import dataclass, field
 from datetime import date, datetime
 from uuid import UUID
 
-from .common import _dt, _uuid
+from .common import _date, _dt, _uuid
 
 
 @dataclass(slots=True)
@@ -99,8 +99,8 @@ class RebateCodeResponse:
             rebate_code_sign=d.get("RebateCodeSign"),
             rebate_code_type_id=d.get("RebateCodeTypeId"),
             rebate_code_value=d.get("RebateCodeValue"),
-            valid_from=date.fromisoformat(d["ValidFrom"]) if d.get("ValidFrom") else None,
-            valid_to=date.fromisoformat(d["ValidTo"]) if d.get("ValidTo") else None,
+            valid_from=_date(d.get("ValidFrom")),
+            valid_to=_date(d.get("ValidTo")),
             max_number_of_uses=d.get("MaxNumberOfUses"),
             max_number_of_uses_per_customer=d.get("MaxNumberOfUsesPerCustomer"),
             days_of_week=d.get("DaysOfWeek", []),

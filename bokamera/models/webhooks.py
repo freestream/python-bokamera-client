@@ -26,7 +26,7 @@ class WebhookEndpointResponse:
         secret: Signing secret used to verify the authenticity of incoming payloads.
     """
 
-    id: UUID | None = None
+    id: str | None = None
     company_id: UUID | None = None
     url: str | None = None
     description: str | None = None
@@ -38,7 +38,7 @@ class WebhookEndpointResponse:
     def from_dict(cls, d: dict) -> WebhookEndpointResponse:
         """Construct a WebhookEndpointResponse from a raw API response dict."""
         return cls(
-            id=_uuid(d.get("Id")),
+            id=d.get("Id"),
             company_id=_uuid(d.get("CompanyId")),
             url=d.get("Url"),
             description=d.get("Description"),
