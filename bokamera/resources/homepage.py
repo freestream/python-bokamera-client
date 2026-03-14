@@ -187,14 +187,16 @@ class HomepageResource:
         """
         body = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
-            "ServiceLayoutId": service_layout_id,
-            "TimeLayoutId": time_layout_id,
-            "BookingLayoutId": booking_layout_id,
-            "PrimaryColor": primary_color,
-            "DarkTheme": dark_theme,
-            "ShowServiceImage": show_service_image,
-            "EnableLogin": enable_login,
-            "EnableDirectBooking": enable_direct_booking,
+            **{k: v for k, v in {
+                "ServiceLayoutId": service_layout_id,
+                "TimeLayoutId": time_layout_id,
+                "BookingLayoutId": booking_layout_id,
+                "PrimaryColor": primary_color,
+                "DarkTheme": dark_theme,
+                "ShowServiceImage": show_service_image,
+                "EnableLogin": enable_login,
+                "EnableDirectBooking": enable_direct_booking,
+            }.items() if v is not None},
         }
         return HomepageWidgetSettingsResponse.from_dict(self._http.put("/homepage/widget/settings", body))
 

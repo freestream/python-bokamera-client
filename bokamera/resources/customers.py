@@ -151,15 +151,17 @@ class CustomerResource:
         """
         body = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
-            "Firstname": firstname,
-            "Lastname": lastname,
-            "Email": email,
-            "Phone": phone,
-            "PersonalIdentityNumber": personal_identity_number,
-            "CustomFields": custom_fields,
-            "AccessKeys": access_keys,
-            "AccessKeysToDelete": access_keys_to_delete,
-            "InvoiceAddress": invoice_address.to_dict() if invoice_address else None,
+            **{k: v for k, v in {
+                "Firstname": firstname,
+                "Lastname": lastname,
+                "Email": email,
+                "Phone": phone,
+                "PersonalIdentityNumber": personal_identity_number,
+                "CustomFields": custom_fields,
+                "AccessKeys": access_keys,
+                "AccessKeysToDelete": access_keys_to_delete,
+                "InvoiceAddress": invoice_address.to_dict() if invoice_address else None,
+            }.items() if v is not None},
         }
         return CustomerResponse.from_dict(self._http.put(f"/customers/{customer_id}", body))
 

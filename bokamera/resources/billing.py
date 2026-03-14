@@ -131,9 +131,11 @@ class BillingResource:
         body = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             "LicensePlanId": license_plan_id,
-            "Name": name,
-            "Email": email,
-            "VatRegistrationNumber": vat_registration_number,
+            **{k: v for k, v in {
+                "Name": name,
+                "Email": email,
+                "VatRegistrationNumber": vat_registration_number,
+            }.items() if v is not None},
         }
         return BillingInformationResponse.from_dict(self._http.put("/billing/company/", body))
 

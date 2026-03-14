@@ -236,9 +236,11 @@ class BookingResource:
         """
         body = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
-            "UnbookedComments": unbooked_comments,
-            "Resources": resources,
-            "CustomFields": custom_fields,
+            **{k: v for k, v in {
+                "UnbookedComments": unbooked_comments,
+                "Resources": resources,
+                "CustomFields": custom_fields,
+            }.items() if v is not None},
         }
         return BookingResponse.from_dict(self._http.put(f"/bookings/{booking_id}", body))
 
