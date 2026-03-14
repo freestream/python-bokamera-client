@@ -76,6 +76,7 @@ class BokaMeraClient:
         username: str | None = None,
         password: str | None = None,
         access_token: str | None = None,
+        debug: bool = False,
     ) -> None:
         """Create a new BokaMera API client.
 
@@ -93,6 +94,8 @@ class BokaMeraClient:
             password: BokaMera admin password.  Requires ``username``.
             access_token: Pre-fetched OAuth2 Bearer token.  Use this if you
                 manage token acquisition outside the library.
+            debug: When ``True``, log every HTTP request and response to
+                stderr via the ``bokamera.http`` logger (DEBUG level).
 
         Raises:
             BokaMeraAuthError: If ``username``/``password`` are provided and
@@ -114,6 +117,7 @@ class BokaMeraClient:
             base_url=base_url,
             timeout=timeout,
             access_token=access_token,
+            debug=debug,
         )
         self._init_resources()
 

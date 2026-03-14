@@ -8,6 +8,8 @@ request serialisation, response parsing, and error mapping for all API calls.
 
 from __future__ import annotations
 
+import json
+import logging
 from typing import Any
 from uuid import UUID
 
@@ -23,6 +25,44 @@ from .exceptions import (
 )
 
 _BASE_URL = "https://api.bokamera.se"
+
+_log = logging.getLogger("bokamera.http")
+
+
+def _log_exchange(response: httpx.Response, *, binary_response: bool = False) -> None:
+    """Log the full HTTP request and response in wire format."""
+    req = response.request
+    raw_path = req.url.raw_path.decode("ascii", errors="replace")
+
+    lines: list[str] = []
+
+    # ── Request ──────────────────────────────────────────────────────────────
+    lines.append(f"{req.method} {raw_path} HTTP/1.1")
+    for k, v in req.headers.items():
+        lines.append(f"{k}: {v}")
+    lines.append("")
+    if req.content:
+        try:
+            lines.append(json.dumps(json.loads(req.content), indent=2, ensure_ascii=False))
+        except Exception:
+            lines.append(req.content.decode("utf-8", errors="replace"))
+    lines.append("")
+
+    # ── Response ─────────────────────────────────────────────────────────────
+    reason = getattr(response, "reason_phrase", "")
+    lines.append(f"HTTP/1.1 {response.status_code} {reason}")
+    for k, v in response.headers.items():
+        lines.append(f"{k}: {v}")
+    lines.append("")
+    if binary_response:
+        lines.append(f"<binary {len(response.content)} bytes>")
+    else:
+        try:
+            lines.append(json.dumps(response.json(), indent=2, ensure_ascii=False))
+        except Exception:
+            lines.append(response.text)
+
+    _log.debug("\n" + "\n".join(lines))
 
 
 def _clean(params: dict) -> dict:
@@ -53,6 +93,8 @@ class BokaMeraHTTPClient:
         timeout: Request timeout in seconds.
         access_token: OAuth2 Bearer token.  When provided it is sent as
             ``Authorization: Bearer <token>`` on every request.
+        debug: When ``True``, log every request and response at DEBUG level
+            via the ``bokamera.http`` logger.
     """
 
     def __init__(
@@ -62,11 +104,16 @@ class BokaMeraHTTPClient:
         base_url: str = _BASE_URL,
         timeout: float = 30.0,
         access_token: str | None = None,
+        debug: bool = False,
     ) -> None:
         self._api_key = api_key
         self._company_id = company_id
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
+        self._debug = debug
+        if debug:
+            logging.basicConfig(level=logging.DEBUG)
+            _log.setLevel(logging.DEBUG)
         headers: dict[str, str] = {"x-api-key": api_key, "Accept": "application/json"}
         if access_token:
             headers["Authorization"] = f"Bearer {access_token}"
@@ -138,6 +185,8 @@ class BokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = self._client.get(path, params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response)
         self._raise_for_status(response)
         return response.json()
 
@@ -156,6 +205,8 @@ class BokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = self._client.post(path, json=_clean(json or {}), params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response)
         self._raise_for_status(response)
         try:
             return response.json()
@@ -177,6 +228,8 @@ class BokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = self._client.put(path, json=_clean(json or {}), params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response)
         self._raise_for_status(response)
         try:
             return response.json()
@@ -197,6 +250,8 @@ class BokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = self._client.delete(path, params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response)
         self._raise_for_status(response)
         try:
             return response.json()
@@ -219,6 +274,8 @@ class BokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = self._client.get(path, params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response, binary_response=True)
         self._raise_for_status(response)
         return response.content
 
@@ -252,6 +309,8 @@ class AsyncBokaMeraHTTPClient:
         timeout: Request timeout in seconds.
         access_token: OAuth2 Bearer token.  When provided it is sent as
             ``Authorization: Bearer <token>`` on every request.
+        debug: When ``True``, log every request and response at DEBUG level
+            via the ``bokamera.http`` logger.
     """
 
     def __init__(
@@ -261,11 +320,16 @@ class AsyncBokaMeraHTTPClient:
         base_url: str = _BASE_URL,
         timeout: float = 30.0,
         access_token: str | None = None,
+        debug: bool = False,
     ) -> None:
         self._api_key = api_key
         self._company_id = company_id
         self._base_url = base_url.rstrip("/")
         self._timeout = timeout
+        self._debug = debug
+        if debug:
+            logging.basicConfig(level=logging.DEBUG)
+            _log.setLevel(logging.DEBUG)
         headers: dict[str, str] = {"x-api-key": api_key, "Accept": "application/json"}
         if access_token:
             headers["Authorization"] = f"Bearer {access_token}"
@@ -337,6 +401,8 @@ class AsyncBokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = await self._client.get(path, params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response)
         self._raise_for_status(response)
         return response.json()
 
@@ -355,6 +421,8 @@ class AsyncBokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = await self._client.post(path, json=_clean(json or {}), params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response)
         self._raise_for_status(response)
         try:
             return response.json()
@@ -376,6 +444,8 @@ class AsyncBokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = await self._client.put(path, json=_clean(json or {}), params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response)
         self._raise_for_status(response)
         try:
             return response.json()
@@ -396,6 +466,8 @@ class AsyncBokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = await self._client.delete(path, params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response)
         self._raise_for_status(response)
         try:
             return response.json()
@@ -416,6 +488,8 @@ class AsyncBokaMeraHTTPClient:
             BokaMeraHTTPError: If the response status is not 2xx.
         """
         response = await self._client.get(path, params=_clean(params or {}))
+        if self._debug:
+            _log_exchange(response, binary_response=True)
         self._raise_for_status(response)
         return response.content
 
