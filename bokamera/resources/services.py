@@ -140,11 +140,38 @@ class ServiceResource:
         name: str | None = None,
         description: str | None = None,
         group: str | None = None,
+        active: bool | None = None,
+        duration_type_id: int | None = None,
+        booking_status_id: int | None = None,
+        pause_after_booking: int | None = None,
+        unbook_before_days: int | None = None,
+        unbook_before_hours: int | None = None,
+        unbook_before_minutes: int | None = None,
+        book_before_days: int | None = None,
+        book_before_hours: int | None = None,
+        book_before_minutes: int | None = None,
+        enable_booking_queue: bool | None = None,
+        enable_code_lock_sync: bool | None = None,
+        enable_google_meet_booking: bool | None = None,
+        enable_customer_manual_payment: bool | None = None,
         duration: int | None = None,
+        min_duration: int | None = None,
+        max_duration: int | None = None,
+        duration_interval: int | None = None,
+        should_pay_reservation_cost: bool | None = None,
+        should_pay_full_cost: bool | None = None,
         total_spots: int | None = None,
+        lock_spots_to_booking: bool | None = None,
+        price_view_type_id: int | None = None,
+        group_booking: dict | None = None,
+        multiple_resource: dict | None = None,
+        sort_order: int | None = None,
+        only_visible_by_admin: bool | None = None,
+        is_payment_enabled: bool | None = None,
+        max_payment_time: int | None = None,
         image_url: str | None = None,
         resource_types: list[dict] | None = None,
-        schedules: list[dict] | None = None,
+        schedules: dict | None = None,
         custom_fields: list[dict] | None = None,
         company_id: UUID | str | None = None,
     ) -> ServiceResponse:
@@ -155,12 +182,39 @@ class ServiceResource:
             name: New display name.
             description: New description.
             group: New group/category name.
-            duration: New duration in minutes.
-            total_spots: New maximum number of simultaneous bookings.
+            active: Whether the service is active.
+            duration_type_id: ID of the duration type (e.g. fixed, variable).
+            booking_status_id: Default booking status applied to new bookings.
+            pause_after_booking: Pause time in minutes added after each booking.
+            unbook_before_days: Days before start within which cancellation is allowed.
+            unbook_before_hours: Hours component for cancellation deadline.
+            unbook_before_minutes: Minutes component for cancellation deadline.
+            book_before_days: Days before start that booking opens.
+            book_before_hours: Hours component for booking opening time.
+            book_before_minutes: Minutes component for booking opening time.
+            enable_booking_queue: Enable the waiting queue for this service.
+            enable_code_lock_sync: Sync bookings with the code lock integration.
+            enable_google_meet_booking: Create Google Meet links for bookings.
+            enable_customer_manual_payment: Allow customers to mark bookings as manually paid.
+            duration: Duration of the service in minutes.
+            min_duration: Minimum selectable duration in minutes.
+            max_duration: Maximum selectable duration in minutes.
+            duration_interval: Step size in minutes for variable durations.
+            should_pay_reservation_cost: Charge the reservation cost at booking time.
+            should_pay_full_cost: Charge the full cost at booking time.
+            total_spots: Maximum number of simultaneous bookings.
+            lock_spots_to_booking: Lock the number of spots to the booking quantity.
+            price_view_type_id: Controls how prices are displayed to customers.
+            group_booking: Group booking settings dict (``Active``, ``Min``, ``Max``).
+            multiple_resource: Multiple resource settings dict (``Active``, ``Min``, ``Max``).
+            sort_order: Display order of the service in listings.
+            only_visible_by_admin: Hide the service from customers (admin-only).
+            is_payment_enabled: Enable payment collection for this service.
+            max_payment_time: Minutes the customer has to complete payment.
             image_url: New cover image URL.
-            resource_types: Updated resource type assignments.
-            schedules: Updated schedule assignments.
-            custom_fields: Updated custom field definitions.
+            resource_types: Updated resource type assignments (list of dicts with ``Id``, ``CompanyId``, ``SelectableByUser``).
+            schedules: Updated schedule assignments dict with ``RecurringSchedules`` and ``DateSchedules`` keys.
+            custom_fields: Updated custom field values (list of dicts with ``Id`` and ``Value``).
             company_id: Target company (defaults to the client's company).
 
         Returns:
@@ -168,15 +222,44 @@ class ServiceResource:
         """
         body = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
-            "Name": name,
-            "Description": description,
-            "Group": group,
-            "Duration": duration,
-            "TotalSpots": total_spots,
-            "ImageUrl": image_url,
-            "ResourceTypes": resource_types,
-            "Schedules": schedules,
-            "CustomFields": custom_fields,
+            **{k: v for k, v in {
+                "Name": name,
+                "Description": description,
+                "Group": group,
+                "Active": active,
+                "DurationTypeId": duration_type_id,
+                "BookingStatusId": booking_status_id,
+                "PauseAfterBooking": pause_after_booking,
+                "UnbookBeforeDays": unbook_before_days,
+                "UnbookBeforeHours": unbook_before_hours,
+                "UnbookBeforeMinutes": unbook_before_minutes,
+                "BookBeforeDays": book_before_days,
+                "BookBeforeHours": book_before_hours,
+                "BookBeforeMinutes": book_before_minutes,
+                "EnableBookingQueue": enable_booking_queue,
+                "EnableCodeLockSync": enable_code_lock_sync,
+                "EnableGoogleMeetBooking": enable_google_meet_booking,
+                "EnableCustomerManualPayment": enable_customer_manual_payment,
+                "Duration": duration,
+                "MinDuration": min_duration,
+                "MaxDuration": max_duration,
+                "DurationInterval": duration_interval,
+                "ShouldPayReservationCost": should_pay_reservation_cost,
+                "ShouldPayFullCost": should_pay_full_cost,
+                "TotalSpots": total_spots,
+                "LockSpotsToBooking": lock_spots_to_booking,
+                "PriceViewTypeId": price_view_type_id,
+                "GroupBooking": group_booking,
+                "MultipleResource": multiple_resource,
+                "SortOrder": sort_order,
+                "OnlyVisibleByAdmin": only_visible_by_admin,
+                "IsPaymentEnabled": is_payment_enabled,
+                "MaxPaymentTime": max_payment_time,
+                "ImageUrl": image_url,
+                "ResourceTypes": resource_types,
+                "Schedules": schedules,
+                "CustomFields": custom_fields,
+            }.items() if v is not None},
         }
         return ServiceResponse.from_dict(self._http.put(f"/services/{service_id}", body))
 
