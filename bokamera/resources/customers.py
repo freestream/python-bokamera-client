@@ -34,6 +34,8 @@ class CustomerResource:
         include_invoice_address: bool | None = None,
         skip: int | None = None,
         take: int | None = None,
+        include_custom_fields: bool | None = None,
+        include_tags: bool | None = None,
     ) -> list[CustomerResponse]:
         """List customers for a company.
 
@@ -65,6 +67,8 @@ class CustomerResource:
             "IncludeInvoiceAddress": include_invoice_address,
             "Skip": skip,
             "Take": take,
+            "IncludeCustomFields": include_custom_fields,
+            "IncludeTags": include_tags,
         }
         data = self._http.get("/customers", params)
         if isinstance(data, list):
@@ -83,6 +87,7 @@ class CustomerResource:
         access_keys: list[dict] | None = None,
         invoice_address: InvoiceAddress | None = None,
         subscribed_to_newsletter: bool = False,
+        tag_ids: list[int] | None = None,
         company_id: UUID | str | None = None,
     ) -> CustomerResponse:
         """Create a new customer.
@@ -113,6 +118,7 @@ class CustomerResource:
             "AccessKeys": access_keys or [],
             "InvoiceAddress": invoice_address.to_dict() if invoice_address else None,
             "SubscribedToNewsletter": subscribed_to_newsletter,
+            "TagIds": tag_ids,
         }
         return CustomerResponse.from_dict(self._http.post("/customers", body))
 
@@ -130,6 +136,7 @@ class CustomerResource:
         access_keys: list[dict] | None = None,
         access_keys_to_delete: list[dict] | None = None,
         invoice_address: InvoiceAddress | None = None,
+        subscribed_to_newsletter: bool | None = None,
     ) -> CustomerResponse:
         """Update an existing customer.
 
@@ -161,6 +168,7 @@ class CustomerResource:
                 "AccessKeys": access_keys,
                 "AccessKeysToDelete": access_keys_to_delete,
                 "InvoiceAddress": invoice_address.to_dict() if invoice_address else None,
+                "SubscribedToNewsletter": subscribed_to_newsletter,
             }.items() if v is not None},
         }
         return CustomerResponse.from_dict(self._http.put(f"/customers/{customer_id}", body))
@@ -240,6 +248,7 @@ class CustomerResource:
         include_customer_information: bool | None = None,
         include_article_information: bool | None = None,
         include_payment_log: bool | None = None,
+        include_company_information: bool | None = None,
     ) -> list[CustomerArticleResponse]:
         """List customer article subscriptions.
 
@@ -263,6 +272,7 @@ class CustomerResource:
             "IncludeCustomerInformation": include_customer_information,
             "IncludeArticleInformation": include_article_information,
             "IncludePaymentLog": include_payment_log,
+            "IncludeCompanyInformation": include_company_information,
         }
         data = self._http.get("/customerarticle", params)
         if isinstance(data, list):

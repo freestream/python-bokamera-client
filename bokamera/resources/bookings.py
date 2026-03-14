@@ -63,6 +63,9 @@ class BookingResource:
         include_calendar_export_status: bool | None = None,
         include_status_information: bool | None = None,
         max_limit: int | None = None,
+        include_tags: bool | None = None,
+        booking_resource_relation_resource_ids: list[int] | None = None,
+        booking_resource_relation_resource_type_ids: list[int] | None = None,
         skip: int | None = None,
         take: int | None = None,
     ) -> QueryResponse[BookingResponse]:
@@ -126,6 +129,9 @@ class BookingResource:
             "IncludeCalendarExportStatus": include_calendar_export_status,
             "IncludeStatusInformation": include_status_information,
             "MaxLimit": max_limit,
+            "IncludeTags": include_tags,
+            "BookingResourceRelationResourceIds": booking_resource_relation_resource_ids,
+            "BookingResourceRelationResourceTypeIds": booking_resource_relation_resource_type_ids,
             "Skip": skip,
             "Take": take,
         }
@@ -157,6 +163,7 @@ class BookingResource:
         comments_to_customer: str | None = None,
         invoice_address: dict | None = None,
         allow_booking_outside_schedules: bool = False,
+        tag_ids: list[int] | None = None,
     ) -> BookingResponse:
         """Create a new booking.
 
@@ -210,6 +217,7 @@ class BookingResource:
             "CommentsToCustomer": comments_to_customer,
             "InvoiceAddress": invoice_address,
             "AllowBookingOutsideSchedules": allow_booking_outside_schedules,
+            "TagIds": tag_ids,
         }
         return BookingResponse.from_dict(self._http.post("/bookings", body))
 
@@ -218,18 +226,42 @@ class BookingResource:
         booking_id: int,
         *,
         company_id: UUID | str | None = None,
+        from_: datetime | None = None,
+        to: datetime | None = None,
         unbooked_comments: str | None = None,
+        booked_comments: str | None = None,
+        comments_to_customer: str | None = None,
+        status: str | None = None,
+        payment_expiration: str | None = None,
+        last_time_to_unbook: str | None = None,
         resources: list[dict] | None = None,
         custom_fields: list[dict] | None = None,
+        send_sms_confirmation: bool | None = None,
+        send_email_confirmation: bool | None = None,
+        allow_booking_outside_schedules: bool | None = None,
+        comment: str | None = None,
+        message: str | None = None,
     ) -> BookingResponse:
         """Update an existing booking.
 
         Args:
             booking_id: ID of the booking to update.
             company_id: Target company (defaults to the client's company).
+            from_: New start datetime for the booking.
+            to: New end datetime for the booking.
             unbooked_comments: Internal comment to store on the booking.
+            booked_comments: Internal comment visible to admins.
+            comments_to_customer: Comment included in notifications to the customer.
+            status: New booking status string.
+            payment_expiration: ISO datetime string for payment expiry override.
+            last_time_to_unbook: ISO datetime string for cancellation deadline override.
             resources: Updated resource assignments.
             custom_fields: Updated custom field values.
+            send_sms_confirmation: Send an SMS confirmation on update.
+            send_email_confirmation: Send an email confirmation on update.
+            allow_booking_outside_schedules: Allow moving booking outside schedule hours.
+            comment: Internal admin comment.
+            message: Custom message sent to the customer.
 
         Returns:
             The updated :class:`~bokamera.models.bookings.BookingResponse`.
@@ -237,9 +269,21 @@ class BookingResource:
         body = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             **{k: v for k, v in {
+                "From": from_.isoformat() if from_ else None,
+                "To": to.isoformat() if to else None,
                 "UnbookedComments": unbooked_comments,
+                "BookedComments": booked_comments,
+                "CommentsToCustomer": comments_to_customer,
+                "Status": status,
+                "PaymentExpiration": payment_expiration,
+                "LastTimeToUnBook": last_time_to_unbook,
                 "Resources": resources,
                 "CustomFields": custom_fields,
+                "SendSmsConfirmation": send_sms_confirmation,
+                "SendEmailConfirmation": send_email_confirmation,
+                "AllowBookingOutsideSchedules": allow_booking_outside_schedules,
+                "Comment": comment,
+                "Message": message,
             }.items() if v is not None},
         }
         return BookingResponse.from_dict(self._http.put(f"/bookings/{booking_id}", body))
@@ -326,7 +370,24 @@ class BookingResource:
         company_id: UUID | str | None = None,
         booking_start: datetime | None = None,
         booking_end: datetime | None = None,
+        created_from: datetime | None = None,
+        created_to: datetime | None = None,
+        customer_id: UUID | str | None = None,
+        status_ids: list[int] | None = None,
+        include_statuses: list[int] | None = None,
         company_bookings: bool | None = None,
+        include_custom_fields: bool | None = None,
+        include_custom_field_values: bool | None = None,
+        include_price_information: bool | None = None,
+        include_payment_log: bool | None = None,
+        include_checkouts: bool | None = None,
+        include_booked_resource_types: bool | None = None,
+        include_company_information: bool | None = None,
+        include_customer_information: bool | None = None,
+        include_tags: bool | None = None,
+        booking_resource_relation_resource_ids: list[int] | None = None,
+        booking_resource_relation_resource_type_ids: list[int] | None = None,
+        max_limit: int | None = None,
         skip: int | None = None,
         take: int | None = None,
     ) -> QueryResponse[GroupedBookingResponse]:
@@ -347,7 +408,24 @@ class BookingResource:
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             "BookingStart": booking_start.isoformat() if booking_start else None,
             "BookingEnd": booking_end.isoformat() if booking_end else None,
+            "CreatedFrom": created_from.isoformat() if created_from else None,
+            "CreatedTo": created_to.isoformat() if created_to else None,
+            "CustomerId": str(customer_id) if customer_id else None,
+            "StatusIds": status_ids,
+            "IncludeStatuses": include_statuses,
             "CompanyBookings": company_bookings,
+            "IncludeCustomFields": include_custom_fields,
+            "IncludeCustomFieldValues": include_custom_field_values,
+            "IncludePriceInformation": include_price_information,
+            "IncludePaymentLog": include_payment_log,
+            "IncludeCheckouts": include_checkouts,
+            "IncludeBookedResourceTypes": include_booked_resource_types,
+            "IncludeCompanyInformation": include_company_information,
+            "IncludeCustomerInformation": include_customer_information,
+            "IncludeTags": include_tags,
+            "BookingResourceRelationResourceIds": booking_resource_relation_resource_ids,
+            "BookingResourceRelationResourceTypeIds": booking_resource_relation_resource_type_ids,
+            "MaxLimit": max_limit,
             "Skip": skip,
             "Take": take,
         }
@@ -655,6 +733,10 @@ class BookingResource:
         date_end: datetime | None = None,
         skip: int | None = None,
         take: int | None = None,
+        company_queue_items: bool | None = None,
+        include_service_information: bool | None = None,
+        include_company_information: bool | None = None,
+        include_customer_information: bool | None = None,
     ) -> list[BookingUserQueueResponse]:
         """List waiting-queue entries.
 
@@ -680,6 +762,10 @@ class BookingResource:
             "DateEnd": date_end.isoformat() if date_end else None,
             "Skip": skip,
             "Take": take,
+            "CompanyQueueItems": company_queue_items,
+            "IncludeServiceInformation": include_service_information,
+            "IncludeCompanyInformation": include_company_information,
+            "IncludeCustomerInformation": include_customer_information,
         }
         data = self._http.get("/bookinguserqueue/user", params)
         if isinstance(data, list):
@@ -699,16 +785,47 @@ class BookingResource:
         params = {"CompanyId": str(company_id) if company_id else self._http.default_company_id}
         return BookingUserQueueResponse.from_dict(self._http.get(f"/bookinguserqueue/{queue_id}", params))
 
-    def join_queue(self, *, custom_fields: list[dict] | None = None) -> BookingUserQueueResponse:
+    def join_queue(
+        self,
+        *,
+        service_id: int | None = None,
+        from_: datetime | None = None,
+        to: datetime | None = None,
+        customer_id: UUID | str | None = None,
+        customer: dict | None = None,
+        quantities: list[dict] | None = None,
+        custom_fields: list[dict] | None = None,
+        invoice_address: dict | None = None,
+        company_id: UUID | str | None = None,
+    ) -> BookingUserQueueResponse:
         """Add the authenticated user to the waiting queue for a service.
 
         Args:
+            service_id: ID of the service to join the queue for.
+            from_: Desired start datetime.
+            to: Desired end datetime.
+            customer_id: UUID of the customer joining the queue.
+            customer: Customer details dict.
+            quantities: Quantity lines for the queue entry.
             custom_fields: Optional custom field values to submit with the queue entry.
+            invoice_address: Invoice address for the queue entry.
+            company_id: Target company (defaults to the client's company).
 
         Returns:
             The newly created :class:`~bokamera.models.bookings.BookingUserQueueResponse`.
         """
-        return BookingUserQueueResponse.from_dict(self._http.post("/bookinguserqueue", {"CustomFields": custom_fields or []}))
+        body = {
+            "CompanyId": str(company_id) if company_id else self._http.default_company_id,
+            "ServiceId": service_id,
+            "From": from_.isoformat() if from_ else None,
+            "To": to.isoformat() if to else None,
+            "CustomerId": str(customer_id) if customer_id else None,
+            "Customer": customer,
+            "Quantities": quantities or [],
+            "CustomFields": custom_fields or [],
+            "InvoiceAddress": invoice_address,
+        }
+        return BookingUserQueueResponse.from_dict(self._http.post("/bookinguserqueue", body))
 
     def leave_queue(self, queue_id: int, *, company_id: UUID | str | None = None, customer_id: UUID | str | None = None) -> BookingUserQueueResponse:
         """Remove an entry from the waiting queue.

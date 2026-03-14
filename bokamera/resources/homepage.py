@@ -29,7 +29,7 @@ class HomepageResource:
 
     # ── Homepage settings ────────────────────────────────────────────────────
 
-    def get_settings(self, *, site_path: str, company_id: UUID | str | None = None, **includes: bool) -> HomepageSettingsResponse:
+    def get_settings(self, *, site_path: str, company_id: UUID | str | None = None, include_home_page_template_options: bool | None = None, include_home_page_hero_section_style_options: bool | None = None, **includes: bool) -> HomepageSettingsResponse:
         """Retrieve homepage settings for a company.
 
         Args:
@@ -43,6 +43,8 @@ class HomepageResource:
         params = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             "SitePath": site_path,
+            "IncludeHomePageTemplateOptions": include_home_page_template_options,
+            "IncludeHomePageHeroSectionStyleOptions": include_home_page_hero_section_style_options,
             **includes,
         }
         return HomepageSettingsResponse.from_dict(self._http.get("/homepage/settings", params))
@@ -138,7 +140,7 @@ class HomepageResource:
 
     # ── Widget settings ──────────────────────────────────────────────────────
 
-    def get_widget_settings(self, *, site_path: str, company_id: UUID | str | None = None, **includes: bool) -> HomepageWidgetSettingsResponse:
+    def get_widget_settings(self, *, site_path: str, company_id: UUID | str | None = None, include_service_layout_options: bool | None = None, include_time_layout_options: bool | None = None, include_booking_layout_options: bool | None = None, include_booking_method_options: bool | None = None, **includes: bool) -> HomepageWidgetSettingsResponse:
         """Retrieve booking widget settings for a company.
 
         Args:
@@ -152,6 +154,10 @@ class HomepageResource:
         params = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             "SitePath": site_path,
+            "IncludeServiceLayoutOptions": include_service_layout_options,
+            "IncludeTimeLayoutOptions": include_time_layout_options,
+            "IncludeBookingLayoutOptions": include_booking_layout_options,
+            "IncludeBookingMethodOptions": include_booking_method_options,
             **includes,
         }
         return HomepageWidgetSettingsResponse.from_dict(self._http.get("/homepage/widget/settings", params))
@@ -168,6 +174,13 @@ class HomepageResource:
         show_service_image: bool | None = None,
         enable_login: bool | None = None,
         enable_direct_booking: bool | None = None,
+        show_rebate_code_field: bool | None = None,
+        show_next_available_time: bool | None = None,
+        show_end_time: bool | None = None,
+        show_subscribe_to_newsletter: bool | None = None,
+        booked_time_slot_text: str | None = None,
+        enable_create_account: bool | None = None,
+        enable_facebook_login: bool | None = None,
     ) -> HomepageWidgetSettingsResponse:
         """Update booking widget settings for a company.
 
@@ -196,6 +209,13 @@ class HomepageResource:
                 "ShowServiceImage": show_service_image,
                 "EnableLogin": enable_login,
                 "EnableDirectBooking": enable_direct_booking,
+                "ShowRebateCodeField": show_rebate_code_field,
+                "ShowNextAvailableTime": show_next_available_time,
+                "ShowEndTime": show_end_time,
+                "ShowSubscribeToNewsletter": show_subscribe_to_newsletter,
+                "BookedTimeSlotText": booked_time_slot_text,
+                "EnableCreateAccount": enable_create_account,
+                "EnableFacebookLogin": enable_facebook_login,
             }.items() if v is not None},
         }
         return HomepageWidgetSettingsResponse.from_dict(self._http.put("/homepage/widget/settings", body))

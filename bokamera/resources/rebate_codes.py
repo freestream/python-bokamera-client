@@ -40,6 +40,12 @@ class RebateCodeResource:
         include_usages: bool | None = None,
         include_payment_log: bool | None = None,
         customer_id: UUID | str | None = None,
+        include_code_type_options: bool | None = None,
+        include_status_options: bool | None = None,
+        include_connected_days_of_week: bool | None = None,
+        include_article_information: bool | None = None,
+        include_company_information: bool | None = None,
+        company_rebate_codes: bool | None = None,
     ) -> list[RebateCodeResponse]:
         """List rebate codes for a company.
 
@@ -69,6 +75,12 @@ class RebateCodeResource:
             "IncludeUsages": include_usages,
             "IncludePaymentLog": include_payment_log,
             "CustomerId": str(customer_id) if customer_id else None,
+            "IncludeCodeTypeOptions": include_code_type_options,
+            "IncludeStatusOptions": include_status_options,
+            "IncludeConnectedDaysOfWeek": include_connected_days_of_week,
+            "IncludeArticleInformation": include_article_information,
+            "IncludeCompanyInformation": include_company_information,
+            "CompanyRebateCodes": company_rebate_codes,
         }
         data = self._http.get("/rebatecodes", params)
         if isinstance(data, list):
@@ -90,6 +102,14 @@ class RebateCodeResource:
         customers: list[dict] | None = None,
         currency_id: str | None = None,
         promo_code_receiver: str | None = None,
+        from_time: str | None = None,
+        to_time: str | None = None,
+        article_id: int | None = None,
+        auto_generate_rebate_code_sign: bool | None = None,
+        personal_note: str | None = None,
+        price_vat: float | None = None,
+        vat: float | None = None,
+        invoice_address: dict | None = None,
         company_id: UUID | str | None = None,
     ) -> RebateCodeResponse:
         """Create a new rebate code.
@@ -126,6 +146,14 @@ class RebateCodeResource:
             "Customers": customers or [],
             "CurrencyId": currency_id,
             "PromoCodeReceiver": promo_code_receiver,
+            "FromTime": from_time,
+            "ToTime": to_time,
+            "ArticleId": article_id,
+            "AutoGenerateRebateCodeSign": auto_generate_rebate_code_sign,
+            "PersonalNote": personal_note,
+            "PriceVat": price_vat,
+            "VAT": vat,
+            "InvoiceAddress": invoice_address,
         }
         return RebateCodeResponse.from_dict(self._http.post("/rebatecodes", body))
 
@@ -168,6 +196,9 @@ class RebateCodeResource:
         service_id: int | None = None,
         date: date | None = None,
         customer_email: str | None = None,
+        include_connected_services: bool | None = None,
+        include_connected_days_of_week: bool | None = None,
+        include_connected_customers: bool | None = None,
     ) -> RebateCodeResponse:
         """Look up a rebate code by its code string.
 
@@ -187,6 +218,9 @@ class RebateCodeResource:
             "ServiceId": service_id,
             "Date": date.isoformat() if date else None,
             "CustomerEmail": customer_email,
+            "IncludeConnectedServices": include_connected_services,
+            "IncludeConnectedDaysOfWeek": include_connected_days_of_week,
+            "IncludeConnectedCustomers": include_connected_customers,
         }
         return RebateCodeResponse.from_dict(self._http.get("/rebatecodes/getbysign", params))
 

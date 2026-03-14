@@ -43,6 +43,16 @@ class CompanyResource:
         include_homepage_settings: bool | None = None,
         skip: int | None = None,
         take: int | None = None,
+        active: bool | None = None,
+        organisation_number: str | None = None,
+        company_owner_id: int | None = None,
+        include_booking_agreements: bool | None = None,
+        include_code_lock_system: bool | None = None,
+        include_system_settings: bool | None = None,
+        include_customer_custom_fields: bool | None = None,
+        include_custom_fields: bool | None = None,
+        include_rating_summary: bool | None = None,
+        include_company_owner: bool | None = None,
     ) -> list[CompanyResponse]:
         """Search and list companies.
 
@@ -78,6 +88,16 @@ class CompanyResource:
             "IncludeHomepageSettings": include_homepage_settings,
             "Skip": skip,
             "Take": take,
+            "Active": active,
+            "OrganisationNumber": organisation_number,
+            "CompanyOwnerId": company_owner_id,
+            "IncludeBookingAgreements": include_booking_agreements,
+            "IncludeCodeLockSystem": include_code_lock_system,
+            "IncludeSystemSettings": include_system_settings,
+            "IncludeCustomerCustomFields": include_customer_custom_fields,
+            "IncludeCustomFields": include_custom_fields,
+            "IncludeRatingSummary": include_rating_summary,
+            "IncludeCompanyOwner": include_company_owner,
         }
         data = self._http.get("/companies", params)
         if isinstance(data, list):
@@ -234,6 +254,7 @@ class CompanyResource:
         roles: list[str] | None = None,
         worker_id: str | None = None,
         send_push_notification: bool = False,
+        send_push_notification_reminder: bool = False,
         company_id: UUID | str | None = None,
     ) -> CompanyUserResponse:
         """Create a new administrator account for a company.
@@ -262,6 +283,7 @@ class CompanyResource:
             "Roles": roles or [],
             "WorkerId": worker_id,
             "SendPushNotification": send_push_notification,
+            "SendPushNotificationReminder": send_push_notification_reminder,
         }
         return CompanyUserResponse.from_dict(self._http.post("/administrators/", body))
 

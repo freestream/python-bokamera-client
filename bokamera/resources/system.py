@@ -67,29 +67,47 @@ class SystemResource:
         self,
         *,
         exception_name: str | None = None,
+        inner_exception_name: str | None = None,
         exception_message: str | None = None,
         exception_source: str | None = None,
         stack_trace: str | None = None,
         url: str | None = None,
+        logged_in_user: str | None = None,
+        ip_address: str | None = None,
+        request: str | None = None,
+        session: str | None = None,
+        company_id: UUID | str | None = None,
     ) -> dict:
         """Report a client-side error to the BokaMera error log.
 
         Args:
             exception_name: Class name or type of the exception.
+            inner_exception_name: Class name of the inner/cause exception.
             exception_message: Human-readable exception message.
             exception_source: Source location where the exception occurred.
             stack_trace: Full stack trace string.
             url: URL that was being accessed when the error occurred.
+            logged_in_user: Identifier of the user who was logged in when the error occurred.
+            ip_address: IP address of the client that encountered the error.
+            request: Serialised request payload at the time of the error.
+            session: Serialised session state at the time of the error.
+            company_id: Target company (defaults to the client's company).
 
         Returns:
             Raw API response dict confirming the error report.
         """
         body = {
+            "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             "ExceptionName": exception_name,
+            "InnerExceptionName": inner_exception_name,
             "ExceptionMessage": exception_message,
             "ExceptionSource": exception_source,
             "StackTrace": stack_trace,
             "URL": url,
+            "LoggedInUser": logged_in_user,
+            "IPAddress": ip_address,
+            "Request": request,
+            "Session": session,
         }
         return self._http.post("/errors/", body)
 

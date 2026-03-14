@@ -50,12 +50,32 @@ class CodeLockResource:
         }
         return CodeLockSettingResponse.from_dict(self._http.get("/codelock/settings", params))
 
-    def update_settings(self, *, active: bool, code_lock_systems_id: int, company_id: UUID | str | None = None) -> CodeLockSettingResponse:
+    def update_settings(
+        self,
+        *,
+        active: bool,
+        code_lock_systems_id: int,
+        valid_before_minutes: int | None = None,
+        valid_after_minutes: int | None = None,
+        delete_old_by_schedule: bool | None = None,
+        send_email_notification: bool | None = None,
+        send_sms_notification: bool | None = None,
+        email_notification_time: int | None = None,
+        sms_notification_time: int | None = None,
+        company_id: UUID | str | None = None,
+    ) -> CodeLockSettingResponse:
         """Update the general code lock integration settings for a company.
 
         Args:
             active: Whether the code lock integration should be enabled.
             code_lock_systems_id: ID of the code lock provider system to use.
+            valid_before_minutes: Minutes before booking start that the code is valid.
+            valid_after_minutes: Minutes after booking end that the code remains valid.
+            delete_old_by_schedule: Automatically delete old reservations on a schedule.
+            send_email_notification: Send email notification when code is created.
+            send_sms_notification: Send SMS notification when code is created.
+            email_notification_time: Minutes before booking to send email notification.
+            sms_notification_time: Minutes before booking to send SMS notification.
             company_id: Target company (defaults to the client's company).
 
         Returns:
@@ -65,6 +85,15 @@ class CodeLockResource:
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             "Active": active,
             "CodeLockSystemsId": code_lock_systems_id,
+            **{k: v for k, v in {
+                "ValidBeforeMinutes": valid_before_minutes,
+                "ValidAfterMinutes": valid_after_minutes,
+                "DeleteOldBySchedule": delete_old_by_schedule,
+                "SendEmailNotification": send_email_notification,
+                "SendSMSNotification": send_sms_notification,
+                "EmailNotificationTime": email_notification_time,
+                "SMSNotificationTime": sms_notification_time,
+            }.items() if v is not None},
         }
         return CodeLockSettingResponse.from_dict(self._http.put("/codelock/settings", body))
 

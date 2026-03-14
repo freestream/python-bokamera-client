@@ -263,6 +263,7 @@ class ResourceResource:
         is_blocking: bool | None = None,
         include_resource_details: bool | None = None,
         max_limit: int | None = None,
+        include_calendar_export_status: bool | None = None,
     ) -> list[ResourceTimeExceptionResponse]:
         """List time exceptions (blocks/closures) for resources.
 
@@ -288,6 +289,7 @@ class ResourceResource:
             "IsBlocking": is_blocking,
             "IncludeResourceDetails": include_resource_details,
             "MaxLimit": max_limit,
+            "IncludeCalendarExportStatus": include_calendar_export_status,
         }
         data = self._http.get("/timeexceptions", params)
         if isinstance(data, list):
@@ -312,6 +314,7 @@ class ResourceResource:
         send_sms_confirmation: bool = False,
         send_email_confirmation: bool = False,
         cancel_message: str | None = None,
+        colliding_booking_options: str | None = None,
         company_id: UUID | str | None = None,
     ) -> ResourceTimeExceptionResponse:
         """Create a time exception (block/closure) for one or more resources.
@@ -354,6 +357,7 @@ class ResourceResource:
             "SendSmsConfirmation": send_sms_confirmation,
             "SendEmailConfirmation": send_email_confirmation,
             "CancelMessage": cancel_message,
+            "CollidingBookingOptions": colliding_booking_options,
         }
         return ResourceTimeExceptionResponse.from_dict(self._http.post("/timeexceptions", body))
 

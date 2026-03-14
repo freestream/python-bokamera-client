@@ -153,7 +153,7 @@ class EAccountingResource:
 
     # ── Customers ────────────────────────────────────────────────────────────
 
-    def list_customers(self, *, page_number: int = 1, page_size: int = 50, company_id: UUID | str | None = None) -> dict:
+    def list_customers(self, *, page_number: int = 1, page_size: int = 50, company_id: UUID | str | None = None, order_by: str | None = None, order_by_desc: str | None = None) -> dict:
         """List customers synced to Visma eEkonomi.
 
         Args:
@@ -168,6 +168,8 @@ class EAccountingResource:
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             "PageNumber": page_number,
             "PageSize": page_size,
+            "OrderBy": order_by,
+            "OrderByDesc": order_by_desc,
         }
         return self._http.get("/eaccounting/customers", params)
 
@@ -182,6 +184,9 @@ class EAccountingResource:
         include_invoice_lines: bool | None = None,
         include_invoice_notes: bool | None = None,
         include_invoice_address: bool | None = None,
+        include_payment_term_data: bool | None = None,
+        skip: int | None = None,
+        take: int | None = None,
     ) -> list[EAccountingInvoiceResponse]:
         """List invoices created in eEkonomi.
 
@@ -203,6 +208,9 @@ class EAccountingResource:
             "IncludeInvoiceLines": include_invoice_lines,
             "IncludeInvoiceNotes": include_invoice_notes,
             "IncludeInvoiceAddress": include_invoice_address,
+            "IncludePaymentTermData": include_payment_term_data,
+            "Skip": skip,
+            "Take": take,
         }
         data = self._http.get("/eaccounting/invoices", params)
         if isinstance(data, list):
@@ -281,6 +289,8 @@ class EAccountingResource:
         include_invoice_notes: bool | None = None,
         page_number: int = 1,
         page_size: int = 50,
+        skip: int | None = None,
+        take: int | None = None,
     ) -> dict:
         """List invoice drafts in eEkonomi.
 
@@ -302,6 +312,8 @@ class EAccountingResource:
             "IncludeInvoiceNotes": include_invoice_notes,
             "PageNumber": page_number,
             "PageSize": page_size,
+            "Skip": skip,
+            "Take": take,
         }
         return self._http.get("/eaccounting/invoicedrafts", params)
 

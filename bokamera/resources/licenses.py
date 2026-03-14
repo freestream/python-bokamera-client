@@ -28,6 +28,8 @@ class LicenseResource:
         only_active_licenses: bool | None = None,
         country_id: str | None = None,
         type_id: int | None = None,
+        meta_data: str | None = None,
+        is_extra_license_option: bool | None = None,
         include_license_items: bool | None = None,
         include_license_prices: bool | None = None,
         include_voss_subscription: bool | None = None,
@@ -39,6 +41,8 @@ class LicenseResource:
             only_active_licenses: When ``True``, return only non-expired licenses.
             country_id: ISO country code to filter applicable licenses.
             type_id: Filter to licenses of this type ID.
+            meta_data: Filter by license metadata string.
+            is_extra_license_option: When set, filter to extra/add-on license types only.
             include_license_items: Include feature items in each license.
             include_license_prices: Include pricing details in each license.
             include_voss_subscription: Include Voss subscription data.
@@ -51,6 +55,8 @@ class LicenseResource:
             "OnlyActiveLicenses": only_active_licenses,
             "CountryId": country_id,
             "TypeId": type_id,
+            "MetaData": meta_data,
+            "IsExtraLicenseOption": is_extra_license_option,
             "IncludeLicenseItems": include_license_items,
             "IncludeLicensePrices": include_license_prices,
             "IncludeVossSubscription": include_voss_subscription,

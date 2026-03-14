@@ -72,6 +72,11 @@ class CustomFieldResource:
         sort_order: int | None = None,
         values: list[dict] | None = None,
         services: list[dict] | None = None,
+        field_id: int | None = None,
+        width: int | None = None,
+        mandatory_error_message: str | None = None,
+        multiple_line_text: bool | None = None,
+        reg_ex_error_message: str | None = None,
         company_id: UUID | str | None = None,
     ) -> CustomFieldResponse:
         """Create a new custom field.

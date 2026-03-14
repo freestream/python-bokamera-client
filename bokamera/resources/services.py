@@ -38,8 +38,17 @@ class ServiceResource:
         include_schedules: bool | None = None,
         include_prices: bool | None = None,
         include_custom_fields: bool | None = None,
+        include_custom_field_values: bool | None = None,
         include_rating_reviews: bool | None = None,
         price_date: date | None = None,
+        include_booking_custom_fields: bool | None = None,
+        include_customer_custom_fields: bool | None = None,
+        include_booking_status_options: bool | None = None,
+        include_rating_summary: bool | None = None,
+        include_prices_from_other_days: bool | None = None,
+        price_time: str | None = None,
+        rebate_code_ids: list[int] | None = None,
+        quantities: list[dict] | None = None,
     ) -> list[ServiceResponse]:
         """List services for a company.
 
@@ -51,6 +60,7 @@ class ServiceResource:
             include_schedules: Include schedule details in each service.
             include_prices: Include price details in each service.
             include_custom_fields: Include custom field definitions in each service.
+            include_custom_field_values: Include custom field values in each service.
             include_rating_reviews: Include rating review summary in each service.
             price_date: Evaluate prices as of this date.
 
@@ -65,8 +75,17 @@ class ServiceResource:
             "IncludeSchedules": include_schedules,
             "IncludePrices": include_prices,
             "IncludeCustomFields": include_custom_fields,
+            "IncludeCustomFieldValues": include_custom_field_values,
             "IncludeRatingReviews": include_rating_reviews,
             "PriceDate": price_date.isoformat() if price_date else None,
+            "IncludeBookingCustomFields": include_booking_custom_fields,
+            "IncludeCustomerCustomFields": include_customer_custom_fields,
+            "IncludeBookingStatusOptions": include_booking_status_options,
+            "IncludeRatingSummary": include_rating_summary,
+            "IncludePricesFromOtherDays": include_prices_from_other_days,
+            "PriceTime": price_time,
+            "RebateCodeIds": rebate_code_ids,
+            "Quantities": quantities,
         }
         data = self._http.get("/services", params)
         if isinstance(data, list):
@@ -81,14 +100,36 @@ class ServiceResource:
         group: str | None = None,
         active: bool = True,
         booking_status_id: int | None = None,
-        duration: int | None = None,
         duration_type_id: int | None = None,
+        duration: int | None = None,
+        min_duration: int | None = None,
+        max_duration: int | None = None,
+        duration_interval: int | None = None,
+        pause_after_booking: int | None = None,
+        unbook_before_days: int | None = None,
+        unbook_before_hours: int | None = None,
+        unbook_before_minutes: int | None = None,
+        book_before_days: int | None = None,
+        book_before_hours: int | None = None,
+        book_before_minutes: int | None = None,
         total_spots: int | None = None,
+        lock_spots_to_booking: bool | None = None,
+        price_view_type_id: int | None = None,
+        sort_order: int | None = None,
+        only_visible_by_admin: bool | None = None,
         image_url: str | None = None,
         is_payment_enabled: bool = False,
+        max_payment_time: int | None = None,
+        should_pay_reservation_cost: bool | None = None,
+        should_pay_full_cost: bool | None = None,
         enable_booking_queue: bool = False,
+        enable_code_lock_sync: bool = False,
+        enable_google_meet_booking: bool | None = None,
+        enable_customer_manual_payment: bool | None = None,
+        group_booking: dict | None = None,
+        multiple_resource: dict | None = None,
         resource_types: list[dict] | None = None,
-        schedules: list[dict] | None = None,
+        schedules: dict | None = None,
         custom_fields: list[dict] | None = None,
         company_id: UUID | str | None = None,
     ) -> ServiceResponse:
@@ -100,14 +141,36 @@ class ServiceResource:
             group: Optional group/category name for organising services.
             active: Whether the service is immediately active.
             booking_status_id: Default booking status applied to new bookings.
-            duration: Duration of the service in minutes.
             duration_type_id: ID of the duration type (e.g. fixed, variable).
+            duration: Duration of the service in minutes.
+            min_duration: Minimum selectable duration in minutes.
+            max_duration: Maximum selectable duration in minutes.
+            duration_interval: Step size in minutes for variable durations.
+            pause_after_booking: Pause time in minutes added after each booking.
+            unbook_before_days: Days before start within which cancellation is allowed.
+            unbook_before_hours: Hours component for cancellation deadline.
+            unbook_before_minutes: Minutes component for cancellation deadline.
+            book_before_days: Days before start that booking opens.
+            book_before_hours: Hours component for booking opening time.
+            book_before_minutes: Minutes component for booking opening time.
             total_spots: Maximum number of simultaneous bookings.
+            lock_spots_to_booking: Lock the number of spots to the booking quantity.
+            price_view_type_id: Controls how prices are displayed to customers.
+            sort_order: Display order of the service in listings.
+            only_visible_by_admin: Hide the service from customers (admin-only).
             image_url: URL to the service's cover image.
             is_payment_enabled: Enable payment collection for this service.
+            max_payment_time: Minutes the customer has to complete payment.
+            should_pay_reservation_cost: Charge the reservation cost at booking time.
+            should_pay_full_cost: Charge the full cost at booking time.
             enable_booking_queue: Enable the waiting queue for this service.
+            enable_code_lock_sync: Sync bookings with the code lock integration.
+            enable_google_meet_booking: Create Google Meet links for bookings.
+            enable_customer_manual_payment: Allow customers to mark bookings as manually paid.
+            group_booking: Group booking settings dict (``Active``, ``Min``, ``Max``).
+            multiple_resource: Multiple resource settings dict (``Active``, ``Min``, ``Max``).
             resource_types: Resource type assignments for the service.
-            schedules: Schedule assignments for the service.
+            schedules: Schedule assignments dict with ``RecurringSchedules`` and ``DateSchedules`` keys.
             custom_fields: Custom field definitions for the service.
             company_id: Target company (defaults to the client's company).
 
@@ -117,19 +180,43 @@ class ServiceResource:
         body = {
             "CompanyId": str(company_id) if company_id else self._http.default_company_id,
             "Name": name,
-            "Description": description,
-            "Group": group,
             "Active": active,
-            "BookingStatusId": booking_status_id,
-            "Duration": duration,
-            "DurationTypeId": duration_type_id,
-            "TotalSpots": total_spots,
-            "ImageUrl": image_url,
             "IsPaymentEnabled": is_payment_enabled,
             "EnableBookingQueue": enable_booking_queue,
+            "EnableCodeLockSync": enable_code_lock_sync,
             "ResourceTypes": resource_types or [],
-            "Schedules": schedules or [],
             "CustomFields": custom_fields or [],
+            **{k: v for k, v in {
+                "Description": description,
+                "Group": group,
+                "BookingStatusId": booking_status_id,
+                "DurationTypeId": duration_type_id,
+                "Duration": duration,
+                "MinDuration": min_duration,
+                "MaxDuration": max_duration,
+                "DurationInterval": duration_interval,
+                "PauseAfterBooking": pause_after_booking,
+                "UnbookBeforeDays": unbook_before_days,
+                "UnbookBeforeHours": unbook_before_hours,
+                "UnbookBeforeMinutes": unbook_before_minutes,
+                "BookBeforeDays": book_before_days,
+                "BookBeforeHours": book_before_hours,
+                "BookBeforeMinutes": book_before_minutes,
+                "TotalSpots": total_spots,
+                "LockSpotsToBooking": lock_spots_to_booking,
+                "PriceViewTypeId": price_view_type_id,
+                "SortOrder": sort_order,
+                "OnlyVisibleByAdmin": only_visible_by_admin,
+                "ImageUrl": image_url,
+                "MaxPaymentTime": max_payment_time,
+                "ShouldPayReservationCost": should_pay_reservation_cost,
+                "ShouldPayFullCost": should_pay_full_cost,
+                "EnableGoogleMeetBooking": enable_google_meet_booking,
+                "EnableCustomerManualPayment": enable_customer_manual_payment,
+                "GroupBooking": group_booking,
+                "MultipleResource": multiple_resource,
+                "Schedules": schedules,
+            }.items() if v is not None},
         }
         return ServiceResponse.from_dict(self._http.post("/services", body))
 
@@ -492,6 +579,10 @@ class ServiceResource:
         to: datetime,
         resources: list[dict] | None = None,
         number_of_resources: int | None = None,
+        show_per_resource: bool | None = None,
+        inside_search_interval: bool | None = None,
+        duration: int | None = None,
+        article_ids: list[int] | None = None,
         company_id: UUID | str | None = None,
     ) -> dict:
         """Retrieve available time slots for a service grouped by date.
@@ -514,6 +605,10 @@ class ServiceResource:
             "To": to.isoformat(),
             "Resources": resources,
             "NumberOfResources": number_of_resources,
+            "ShowPerResource": show_per_resource,
+            "InsideSearchInterval": inside_search_interval,
+            "Duration": duration,
+            "ArticleIds": article_ids,
         }
         return self._http.get(f"/services/{service_id}/availabletimes/grouped", params)
 

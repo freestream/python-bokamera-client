@@ -76,6 +76,16 @@ class BillingResource:
         city: str | None = None,
         zip_code: str | None = None,
         country_id: str | None = None,
+        attention: str | None = None,
+        street2: str | None = None,
+        payment_terms_days: int | None = None,
+        gln: str | None = None,
+        reference_line1: str | None = None,
+        reference_line2: str | None = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        phone_number: str | None = None,
+        billing_method_id: int | None = None,
         company_id: UUID | str | None = None,
     ) -> BillingInformationResponse:
         """Create billing information for a company.
@@ -104,6 +114,16 @@ class BillingResource:
             "City": city,
             "ZipCode": zip_code,
             "CountryId": country_id,
+            "Attention": attention,
+            "Street2": street2,
+            "PaymentTermsDays": payment_terms_days,
+            "GLN": gln,
+            "ReferenceLine1": reference_line1,
+            "ReferenceLine2": reference_line2,
+            "FirstName": first_name,
+            "LastName": last_name,
+            "PhoneNumber": phone_number,
+            "BillingMethodId": billing_method_id,
         }
         return BillingInformationResponse.from_dict(self._http.post("/billing/company/", body))
 
@@ -114,6 +134,20 @@ class BillingResource:
         name: str | None = None,
         email: str | None = None,
         vat_registration_number: str | None = None,
+        attention: str | None = None,
+        street1: str | None = None,
+        street2: str | None = None,
+        zip_code: str | None = None,
+        city: str | None = None,
+        country_id: str | None = None,
+        payment_terms_days: int | None = None,
+        gln: str | None = None,
+        reference_line1: str | None = None,
+        reference_line2: str | None = None,
+        first_name: str | None = None,
+        last_name: str | None = None,
+        phone_number: str | None = None,
+        billing_method_id: int | None = None,
         company_id: UUID | str | None = None,
     ) -> BillingInformationResponse:
         """Update the billing information for a company.
@@ -123,6 +157,20 @@ class BillingResource:
             name: Updated billing contact or company name.
             email: Updated billing contact email.
             vat_registration_number: Updated VAT registration number.
+            attention: Attention line for the billing address.
+            street1: Primary street address.
+            street2: Secondary street address line.
+            zip_code: Postal code.
+            city: City name.
+            country_id: ISO country code.
+            payment_terms_days: Number of days for payment terms.
+            gln: GLN (Global Location Number) for e-invoicing.
+            reference_line1: Invoice reference line 1.
+            reference_line2: Invoice reference line 2.
+            first_name: First name of the billing contact.
+            last_name: Last name of the billing contact.
+            phone_number: Phone number of the billing contact.
+            billing_method_id: ID of the billing method to use.
             company_id: Target company (defaults to the client's company).
 
         Returns:
@@ -135,6 +183,20 @@ class BillingResource:
                 "Name": name,
                 "Email": email,
                 "VatRegistrationNumber": vat_registration_number,
+                "Attention": attention,
+                "Street1": street1,
+                "Street2": street2,
+                "ZipCode": zip_code,
+                "City": city,
+                "CountryId": country_id,
+                "PaymentTermsDays": payment_terms_days,
+                "GLN": gln,
+                "ReferenceLine1": reference_line1,
+                "ReferenceLine2": reference_line2,
+                "FirstName": first_name,
+                "LastName": last_name,
+                "PhoneNumber": phone_number,
+                "BillingMethodId": billing_method_id,
             }.items() if v is not None},
         }
         return BillingInformationResponse.from_dict(self._http.put("/billing/company/", body))

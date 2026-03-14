@@ -28,6 +28,8 @@ class ArticleResource:
         active: bool = True,
         id_: int | None = None,
         company_id: UUID | str | None = None,
+        include_service_information: bool | None = None,
+        is_article_payable: bool | None = None,
     ) -> QueryResponse[ArticleResponse]:
         """List articles for a company.
 
@@ -45,6 +47,8 @@ class ArticleResource:
             "Id": id_,
             "Active": active,
             "ArticleTypeId": article_type_id,
+            "IncludeServiceInformation": include_service_information,
+            "IsArticlePayable": is_article_payable,
         }
         return QueryResponse.from_dict(self._http.get("/articles", params), ArticleResponse)
 
@@ -58,6 +62,11 @@ class ArticleResource:
         currency_id: str | None = None,
         duration: int | None = None,
         service_ids: list[int] | None = None,
+        active: bool = True,
+        amount: int | None = None,
+        sort_order: int | None = None,
+        vat: float | None = None,
+        valid_days: int | None = None,
         company_id: UUID | str | None = None,
     ) -> ArticleResponse:
         """Create a new article.
@@ -84,6 +93,11 @@ class ArticleResource:
             "CurrencyId": currency_id,
             "Duration": duration,
             "ServiceIds": service_ids or [],
+            "Active": active,
+            "Amount": amount,
+            "SortOrder": sort_order,
+            "VAT": vat,
+            "ValidDays": valid_days,
         }
         return ArticleResponse.from_dict(self._http.post("/articles", body))
 
@@ -136,6 +150,7 @@ class ArticleResource:
         company_id: UUID | str | None = None,
         created_from: str | None = None,
         created_to: str | None = None,
+        include_article_type: bool | None = None,
     ) -> QueryResponse[PaymentLogResponse]:
         """List payment log entries for articles of a given type.
 
@@ -153,6 +168,7 @@ class ArticleResource:
             "ArticleTypeId": article_type_id,
             "CreatedFrom": created_from,
             "CreatedTo": created_to,
+            "IncludeArticleType": include_article_type,
         }
         return QueryResponse.from_dict(self._http.get("/articles/payments", params), PaymentLogResponse)
 

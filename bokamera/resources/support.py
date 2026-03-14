@@ -36,6 +36,9 @@ class SupportResource:
         include_case_type_information: bool | None = None,
         include_case_area_information: bool | None = None,
         include_case_attachments: bool | None = None,
+        include_case_status_options: bool | None = None,
+        include_case_type_options: bool | None = None,
+        include_case_area_options: bool | None = None,
     ) -> list[SupportCaseResponse]:
         """List support cases for a company.
 
@@ -48,6 +51,9 @@ class SupportResource:
             include_case_type_information: Include case type details.
             include_case_area_information: Include case area details.
             include_case_attachments: Include file attachments in each case.
+            include_case_status_options: Include available status options for UI dropdowns.
+            include_case_type_options: Include available case type options for UI dropdowns.
+            include_case_area_options: Include available case area options for UI dropdowns.
 
         Returns:
             A list of :class:`~bokamera.models.support.SupportCaseResponse` objects.
@@ -61,6 +67,9 @@ class SupportResource:
             "IncludeCaseTypeInformation": include_case_type_information,
             "IncludeCaseAreaInformation": include_case_area_information,
             "IncludeCaseAttachments": include_case_attachments,
+            "IncludeCaseStatusOptions": include_case_status_options,
+            "IncludeCaseTypeOptions": include_case_type_options,
+            "IncludeCaseAreaOptions": include_case_area_options,
         }
         data = self._http.get("/support/cases", params)
         if isinstance(data, list):
