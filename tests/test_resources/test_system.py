@@ -184,3 +184,49 @@ def test_system_list_references_with_id_filter():
         http.close()
     params = route.calls[0].request.url.params
     assert params["Id"] == "5"
+
+
+# ---------------------------------------------------------------------------
+# report_error
+# ---------------------------------------------------------------------------
+
+
+def test_system_report_error_basic():
+    with respx.mock:
+        route = respx.post(f"{BASE}/errors/").mock(
+            return_value=httpx.Response(200, json={"Success": True})
+        )
+        http = make_http()
+        result = SystemResource(http).report_error(
+            exception_name="ValueError",
+            exception_message="Something went wrong",
+            stack_trace="  File ...",
+        )
+        http.close()
+    assert route.called
+    import json
+    body = json.loads(route.calls[0].request.content)
+    assert body["ExceptionName"] == "ValueError"
+    assert body["ExceptionMessage"] == "Something went wrong"
+
+
+def test_system_report_error_extended_params():
+    with respx.mock:
+        route = respx.post(f"{BASE}/errors/").mock(
+            return_value=httpx.Response(200, json={})
+        )
+        http = make_http()
+        SystemResource(http).report_error(
+            exception_name="RuntimeError",
+            inner_exception_name="IOError",
+            logged_in_user="user@example.com",
+            ip_address="1.2.3.4",
+            company_id=COMPANY_UUID,
+        )
+        http.close()
+    import json
+    body = json.loads(route.calls[0].request.content)
+    assert body["InnerExceptionName"] == "IOError"
+    assert body["LoggedInUser"] == "user@example.com"
+    assert body["IPAddress"] == "1.2.3.4"
+    assert body["CompanyId"] == COMPANY_UUID

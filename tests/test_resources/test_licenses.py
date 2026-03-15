@@ -17,6 +17,52 @@ def make_http() -> BokaMeraHTTPClient:
 
 
 # ---------------------------------------------------------------------------
+# list_company_licenses
+# ---------------------------------------------------------------------------
+
+
+def test_license_list_company_licenses():
+    with respx.mock:
+        route = respx.get(f"{BASE}/licenses/company").mock(
+            return_value=httpx.Response(
+                200,
+                json=[
+                    {
+                        "Id": 10,
+                        "CompanyId": COMPANY_UUID,
+                        "TypeId": 2,
+                        "Type": {"Name": "Professional"},
+                        "Active": True,
+                    }
+                ],
+            )
+        )
+        http = make_http()
+        result = LicenseResource(http).list_company_licenses(company_id=COMPANY_UUID)
+        http.close()
+    assert route.called
+    assert len(result) == 1
+    assert result[0].id == 10
+
+
+def test_license_list_company_licenses_new_params():
+    with respx.mock:
+        route = respx.get(f"{BASE}/licenses/company").mock(
+            return_value=httpx.Response(200, json=[])
+        )
+        http = make_http()
+        LicenseResource(http).list_company_licenses(
+            company_id=COMPANY_UUID,
+            meta_data="promo2026",
+            is_extra_license_option=True,
+        )
+        http.close()
+    params = route.calls[0].request.url.params
+    assert params["MetaData"] == "promo2026"
+    assert params["IsExtraLicenseOption"].lower() == "true"
+
+
+# ---------------------------------------------------------------------------
 # list_types
 # ---------------------------------------------------------------------------
 

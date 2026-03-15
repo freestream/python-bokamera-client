@@ -74,3 +74,22 @@ def test_support_list_with_results_wrapper():
         http.close()
     assert len(result) == 1
     assert result[0].title == "API question"
+
+
+def test_support_list_include_options_params():
+    with respx.mock:
+        route = respx.get(f"{BASE}/support/cases").mock(
+            return_value=httpx.Response(200, json=[])
+        )
+        http = make_http()
+        SupportResource(http).list(
+            company_id=COMPANY_UUID,
+            include_case_status_options=True,
+            include_case_type_options=True,
+            include_case_area_options=True,
+        )
+        http.close()
+    params = route.calls[0].request.url.params
+    assert params["IncludeCaseStatusOptions"].lower() == "true"
+    assert params["IncludeCaseTypeOptions"].lower() == "true"
+    assert params["IncludeCaseAreaOptions"].lower() == "true"
