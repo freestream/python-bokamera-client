@@ -32,6 +32,21 @@ class SendReceiptMethod(IntEnum):
     PDF_EXPORT = 2
 
 
+class BookingStatus(IntEnum):
+    """Status of a booking."""
+
+    BOOKED = 1
+    UNBOOKED = 2
+    RESERVED = 3
+    CANCELED = 4
+    AWAITING_PAYMENT = 5
+    AWAITING_PAYMENT_NO_TIME_LIMIT = 6
+    PAYED = 7
+    AWAITING_PAYMENT_REQUEST_FROM_ADMIN = 8
+    AWAITING_PAYMENT_FROM_PROVIDER = 9
+    INVOICED = 10
+
+
 @dataclass(slots=True)
 class BookingCustomer:
     """Customer details embedded inside a booking.
