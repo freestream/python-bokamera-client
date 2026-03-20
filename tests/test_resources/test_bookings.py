@@ -34,8 +34,7 @@ def test_bookings_list_returns_query_response():
                         {
                             "Id": 100,
                             "CompanyId": COMPANY_UUID,
-                            "ServiceId": 5,
-                            "ServiceName": "Haircut",
+                            "Service": {"Id": 5, "Name": "Haircut"},
                         }
                     ],
                     "Total": 1,

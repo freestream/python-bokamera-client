@@ -48,41 +48,98 @@ class BookingStatus(IntEnum):
 
 
 @dataclass(slots=True)
+class BookingTag:
+    """A tag attached to a booking or customer.
+
+    Attributes:
+        id: Tag ID.
+        name: Display name of the tag.
+        color: Hex colour string for the tag.
+        active: Whether the tag is active.
+    """
+
+    id: int | None = None
+    name: str | None = None
+    color: str | None = None
+    active: bool | None = None
+
+    @classmethod
+    def from_dict(cls, d: dict) -> BookingTag:
+        """Construct a BookingTag from a raw API response dict."""
+        return cls(
+            id=d.get("Id"),
+            name=d.get("Name"),
+            color=d.get("Color"),
+            active=d.get("Active"),
+        )
+
+
+@dataclass(slots=True)
 class BookingCustomer:
     """Customer details embedded inside a booking.
 
     Attributes:
+        id: UUID of the customer profile.
         firstname: Customer first name.
         lastname: Customer last name.
         email: Customer email address.
         phone: Customer phone number.
-        customer_id: UUID of the linked customer profile, if any.
+        facebook_user_name: Facebook username if linked.
+        image_url: URL to the customer's profile image.
+        personal_identity_number: National identity number (e.g. Swedish personnummer).
+        corporate_identity_number: Corporate identity number if applicable.
+        invoice_address1: Primary invoice street address.
+        invoice_address2: Secondary invoice street address.
+        invoice_city: Invoice city.
+        invoice_postal_code: Invoice postal code.
+        invoice_country_code: ISO country code for the invoice address.
+        tags: Tags assigned to the customer.
     """
 
+    id: UUID | None = None
     firstname: str | None = None
     lastname: str | None = None
     email: str | None = None
     phone: str | None = None
-    customer_id: UUID | None = None
+    facebook_user_name: str | None = None
+    image_url: str | None = None
+    personal_identity_number: str | None = None
+    corporate_identity_number: str | None = None
+    invoice_address1: str | None = None
+    invoice_address2: str | None = None
+    invoice_city: str | None = None
+    invoice_postal_code: str | None = None
+    invoice_country_code: str | None = None
+    tags: list[BookingTag] = field(default_factory=list)
 
     @classmethod
     def from_dict(cls, d: dict) -> BookingCustomer:
         """Construct a BookingCustomer from a raw API response dict."""
         return cls(
+            id=_uuid(d.get("Id")),
             firstname=d.get("Firstname"),
             lastname=d.get("Lastname"),
             email=d.get("Email"),
             phone=d.get("Phone"),
-            customer_id=_uuid(d.get("CustomerId")),
+            facebook_user_name=d.get("FacebookUserName"),
+            image_url=d.get("ImageUrl"),
+            personal_identity_number=d.get("PersonalIdentityNumber"),
+            corporate_identity_number=d.get("CorporateIdentityNumber"),
+            invoice_address1=d.get("InvoiceAddress1"),
+            invoice_address2=d.get("InvoiceAddress2"),
+            invoice_city=d.get("InvoiceCity"),
+            invoice_postal_code=d.get("InvoicePostalCode"),
+            invoice_country_code=d.get("InvoiceCountryCode"),
+            tags=[BookingTag.from_dict(t) for t in d.get("Tags", [])],
         )
 
     def to_dict(self) -> dict:
         return {k: v for k, v in {
+            "Id": str(self.id) if self.id else None,
             "Firstname": self.firstname,
             "Lastname": self.lastname,
             "Email": self.email,
             "Phone": self.phone,
-            "CustomerId": str(self.customer_id) if self.customer_id else None,
         }.items() if v is not None}
 
 
@@ -94,13 +151,25 @@ class BookingQuantity:
         id: ID of the quantity/price category.
         quantity: Number of units booked for this category.
         price: Unit price applied to this quantity line.
+        price_before_rebate: Price before any rebate code was applied.
+        currency_id: ISO 4217 currency code for the price.
+        price_sign: Display symbol for the currency (e.g. ``"kr"``).
+        category: Name of the price category.
         vat: VAT percentage applied to this quantity line.
+        price_text: Formatted price string for display.
+        occupies_spot: Whether this quantity counts against the service's capacity.
     """
 
     id: int | None = None
     quantity: int = 1
     price: float | None = None
+    price_before_rebate: float | None = None
+    currency_id: str | None = None
+    price_sign: str | None = None
+    category: str | None = None
     vat: float | None = None
+    price_text: str | None = None
+    occupies_spot: bool | None = None
 
     @classmethod
     def from_dict(cls, d: dict) -> BookingQuantity:
@@ -109,7 +178,13 @@ class BookingQuantity:
             id=d.get("Id"),
             quantity=d.get("Quantity", 1),
             price=d.get("Price"),
+            price_before_rebate=d.get("PriceBeforeRebate"),
+            currency_id=d.get("CurrencyId"),
+            price_sign=d.get("PriceSign"),
+            category=d.get("Category"),
             vat=d.get("VAT"),
+            price_text=d.get("PriceText"),
+            occupies_spot=d.get("OccupiesSpot"),
         )
 
     def to_dict(self) -> dict:
@@ -129,16 +204,65 @@ class BookingStatusResponse:
         id: Numeric status ID.
         name: Short status name.
         description: Longer human-readable description.
+        icon: Icon identifier for the status.
+        color: Hex colour string for the status.
     """
 
     id: int | None = None
     name: str | None = None
     description: str | None = None
+    icon: str | None = None
+    color: str | None = None
 
     @classmethod
     def from_dict(cls, d: dict) -> BookingStatusResponse:
         """Construct a BookingStatusResponse from a raw API response dict."""
-        return cls(id=d.get("Id"), name=d.get("Name"), description=d.get("Description"))
+        return cls(
+            id=d.get("Id"),
+            name=d.get("Name"),
+            description=d.get("Description"),
+            icon=d.get("Icon"),
+            color=d.get("Color"),
+        )
+
+
+@dataclass(slots=True)
+class BookingInvoiceAddress:
+    """Invoice address attached directly to a booking.
+
+    Attributes:
+        invoice_address_id: ID of the invoice address record.
+        user_id: UUID of the user who owns this address.
+        corporate_identity_number: Corporate identity number for the invoice.
+        invoice_address1: Primary street address.
+        invoice_address2: Secondary street address.
+        invoice_city: City.
+        invoice_postal_code: Postal code.
+        invoice_country_code: ISO country code.
+    """
+
+    invoice_address_id: str | None = None
+    user_id: str | None = None
+    corporate_identity_number: str | None = None
+    invoice_address1: str | None = None
+    invoice_address2: str | None = None
+    invoice_city: str | None = None
+    invoice_postal_code: str | None = None
+    invoice_country_code: str | None = None
+
+    @classmethod
+    def from_dict(cls, d: dict) -> BookingInvoiceAddress:
+        """Construct a BookingInvoiceAddress from a raw API response dict."""
+        return cls(
+            invoice_address_id=d.get("InvoiceAddressId"),
+            user_id=d.get("UserId"),
+            corporate_identity_number=d.get("CorporateIdentityNumber"),
+            invoice_address1=d.get("InvoiceAddress1"),
+            invoice_address2=d.get("InvoiceAddress2"),
+            invoice_city=d.get("InvoiceCity"),
+            invoice_postal_code=d.get("InvoicePostalCode"),
+            invoice_country_code=d.get("InvoiceCountryCode"),
+        )
 
 
 @dataclass(slots=True)
@@ -149,31 +273,35 @@ class BookingLogResponse:
         id: Log entry ID.
         booking_id: ID of the booking this entry belongs to.
         event_type_id: Numeric identifier of the event type.
-        event_type: Human-readable event type name.
+        event_type_name: Human-readable name of the event type.
+        event_type_description: Description of the event type.
         comments: Optional free-text comment attached to this log entry.
+        user_name: Username or identifier of who triggered the event.
         created: Timestamp when the event occurred.
-        updated_by: Username or identifier of who triggered the event.
     """
 
     id: int | None = None
     booking_id: int | None = None
     event_type_id: int | None = None
-    event_type: str | None = None
+    event_type_name: str | None = None
+    event_type_description: str | None = None
     comments: str | None = None
+    user_name: str | None = None
     created: datetime | None = None
-    updated_by: str | None = None
 
     @classmethod
     def from_dict(cls, d: dict) -> BookingLogResponse:
         """Construct a BookingLogResponse from a raw API response dict."""
+        event_type = d.get("EventType") or {}
         return cls(
             id=d.get("Id"),
             booking_id=d.get("BookingId"),
             event_type_id=d.get("EventTypeId"),
-            event_type=d.get("EventType"),
+            event_type_name=event_type.get("Name") if isinstance(event_type, dict) else event_type,
+            event_type_description=event_type.get("Description") if isinstance(event_type, dict) else None,
             comments=d.get("Comments"),
+            user_name=d.get("UserName"),
             created=_dt(d.get("Created")),
-            updated_by=d.get("UpdatedBy"),
         )
 
 
@@ -187,20 +315,40 @@ class BookingResponse:
         from_: Start date and time of the booking.
         to: End date and time of the booking.
         status_id: Numeric status code.
-        status: Human-readable status name.
+        status: Status string from the API.
+        status_name: Human-readable status name.
+        status_info: Full status details including icon and colour.
+        send_email_reminder: Whether an email reminder is configured.
+        send_sms_reminder: Whether an SMS reminder is configured.
+        send_sms_confirmation: Whether an SMS confirmation is sent.
+        send_email_confirmation: Whether an email confirmation is sent.
+        last_time_to_un_book: Deadline for the customer to cancel self-service.
         service_id: ID of the booked service.
         service_name: Name of the booked service.
         customer: Customer details embedded in the booking.
         quantities: Quantity lines (e.g. number of participants per category).
-        resources: List of resource dicts assigned to this booking.
-        custom_fields: Custom field values collected at booking time.
+        booked_resource_types: Resource types and their assigned resources.
+        company: Company details dict.
+        custom_field_values: Custom field values collected at booking time.
+        invoice_address: Invoice address attached to the booking.
+        payment_expiration: When the pending payment expires.
+        log: Audit log entries for this booking.
         payment_log: Payment transactions associated with this booking.
-        unbooked_on: Timestamp when the booking was cancelled, if applicable.
+        checkout_log: Checkout session log entries.
+        external_reference: External reference records linked to this booking.
+        length_in_minutes: Duration of the booking in minutes.
+        booked_by: Username of who created the booking.
+        booked_comments: Internal comments added at booking time.
         unbooked_comments: Reason for cancellation, if applicable.
+        comments_to_customer: Comments visible to the customer.
         created: Timestamp when the booking was created.
         updated: Timestamp of the most recent modification.
-        total_price: Total price charged for the booking.
+        unbooked_on: Timestamp when the booking was cancelled, if applicable.
         cancellation_code: Code that can be used for self-service cancellation.
+        rating_code: Token used to submit a customer rating for this booking.
+        google_meet_url: Google Meet URL if a video meeting is attached.
+        tags: Tags assigned to this booking.
+        total_price: Total price charged for the booking.
     """
 
     id: int | None = None
@@ -209,23 +357,44 @@ class BookingResponse:
     to: datetime | None = None
     status_id: int | None = None
     status: str | None = None
+    status_name: str | None = None
+    status_info: BookingStatusResponse | None = None
+    send_email_reminder: bool | None = None
+    send_sms_reminder: bool | None = None
+    send_sms_confirmation: bool | None = None
+    send_email_confirmation: bool | None = None
+    last_time_to_un_book: datetime | None = None
     service_id: int | None = None
     service_name: str | None = None
     customer: BookingCustomer | None = None
     quantities: list[BookingQuantity] = field(default_factory=list)
-    resources: list[dict] = field(default_factory=list)
-    custom_fields: list[CustomFieldValue] = field(default_factory=list)
+    booked_resource_types: list[dict] = field(default_factory=list)
+    company: dict = field(default_factory=dict)
+    custom_field_values: list[CustomFieldValue] = field(default_factory=list)
+    invoice_address: BookingInvoiceAddress | None = None
+    payment_expiration: datetime | None = None
+    log: list[BookingLogResponse] = field(default_factory=list)
     payment_log: list[dict] = field(default_factory=list)
-    unbooked_on: datetime | None = None
+    checkout_log: list[dict] = field(default_factory=list)
+    external_reference: list[dict] = field(default_factory=list)
+    length_in_minutes: int | None = None
+    booked_by: str | None = None
+    booked_comments: str | None = None
     unbooked_comments: str | None = None
+    comments_to_customer: str | None = None
     created: datetime | None = None
     updated: datetime | None = None
-    total_price: float | None = None
+    unbooked_on: datetime | None = None
     cancellation_code: str | None = None
+    rating_code: str | None = None
+    google_meet_url: str | None = None
+    tags: list[BookingTag] = field(default_factory=list)
+    total_price: float | None = None
 
     @classmethod
     def from_dict(cls, d: dict) -> BookingResponse:
         """Construct a BookingResponse from a raw API response dict."""
+        service = d.get("Service") or {}
         return cls(
             id=d.get("Id"),
             company_id=_uuid(d.get("CompanyId")),
@@ -233,19 +402,39 @@ class BookingResponse:
             to=_dt(d.get("To")),
             status_id=d.get("StatusId"),
             status=d.get("Status"),
-            service_id=d.get("ServiceId"),
-            service_name=d.get("ServiceName"),
+            status_name=d.get("StatusName"),
+            status_info=BookingStatusResponse.from_dict(d["StatusInfo"]) if d.get("StatusInfo") else None,
+            send_email_reminder=d.get("SendEmailReminder"),
+            send_sms_reminder=d.get("SendSmsReminder"),
+            send_sms_confirmation=d.get("SendSmsConfirmation"),
+            send_email_confirmation=d.get("SendEmailConfirmation"),
+            last_time_to_un_book=_dt(d.get("LastTimeToUnBook")),
+            service_id=service.get("Id") if isinstance(service, dict) else d.get("ServiceId"),
+            service_name=service.get("Name") if isinstance(service, dict) else d.get("ServiceName"),
             customer=BookingCustomer.from_dict(d["Customer"]) if d.get("Customer") else None,
             quantities=[BookingQuantity.from_dict(q) for q in d.get("Quantities", [])],
-            resources=d.get("Resources", []),
-            custom_fields=[CustomFieldValue.from_dict(c) for c in d.get("CustomFields", [])],
+            booked_resource_types=d.get("BookedResourceTypes", []),
+            company=d.get("Company") or {},
+            custom_field_values=[CustomFieldValue.from_dict(c) for c in d.get("CustomFieldValues", [])],
+            invoice_address=BookingInvoiceAddress.from_dict(d["InvoiceAddress"]) if d.get("InvoiceAddress") else None,
+            payment_expiration=_dt(d.get("PaymentExpiration")),
+            log=[BookingLogResponse.from_dict(e) for e in d.get("Log", [])],
             payment_log=d.get("PaymentLog", []),
-            unbooked_on=_dt(d.get("UnbookedOn")),
+            checkout_log=d.get("CheckoutLog", []),
+            external_reference=d.get("ExternalReference", []),
+            length_in_minutes=d.get("LengthInMinutes"),
+            booked_by=d.get("BookedBy"),
+            booked_comments=d.get("BookedComments"),
             unbooked_comments=d.get("UnbookedComments"),
-            created=_dt(d.get("Created")),
-            updated=_dt(d.get("Updated")),
-            total_price=d.get("TotalPrice"),
+            comments_to_customer=d.get("CommentsToCustomer"),
+            created=_dt(d.get("CreatedDate") or d.get("Created")),
+            updated=_dt(d.get("UpdatedDate") or d.get("Updated")),
+            unbooked_on=_dt(d.get("UnbookedOn")),
             cancellation_code=d.get("CancellationCode"),
+            rating_code=d.get("RatingCode"),
+            google_meet_url=d.get("GoogleMeetUrl"),
+            tags=[BookingTag.from_dict(t) for t in d.get("Tags", [])],
+            total_price=d.get("TotalPrice"),
         )
 
 

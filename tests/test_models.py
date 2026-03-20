@@ -120,8 +120,7 @@ class TestBookingResponse:
             "To": "2026-01-15T11:00:00Z",
             "StatusId": 1,
             "Status": "Confirmed",
-            "ServiceId": 5,
-            "ServiceName": "Haircut",
+            "Service": {"Id": 5, "Name": "Haircut"},
             "TotalPrice": 250.0,
             "CancellationCode": "ABC123",
         }
@@ -142,18 +141,18 @@ class TestBookingResponse:
         d = {
             "Id": 1,
             "Customer": {
+                "Id": CUSTOMER_UUID_STR,
                 "Firstname": "Anna",
                 "Lastname": "Svensson",
                 "Email": "anna@example.com",
                 "Phone": "+46701234567",
-                "CustomerId": CUSTOMER_UUID_STR,
             },
         }
         b = BookingResponse.from_dict(d)
         assert b.customer is not None
         assert b.customer.firstname == "Anna"
         assert b.customer.email == "anna@example.com"
-        assert b.customer.customer_id == CUSTOMER_UUID
+        assert b.customer.id == CUSTOMER_UUID
 
     def test_from_dict_defaults_when_empty(self):
         b = BookingResponse.from_dict({})
@@ -162,7 +161,7 @@ class TestBookingResponse:
         assert b.to is None
         assert b.customer is None
         assert b.quantities == []
-        assert b.resources == []
+        assert b.booked_resource_types == []
 
     def test_from_dict_parses_quantities(self):
         d = {
