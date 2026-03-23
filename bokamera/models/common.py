@@ -155,17 +155,27 @@ class CustomFieldValue:
     Attributes:
         id: The ID of the custom field definition.
         column: Internal column name used by the API for storage.
+        name: Display label of the custom field.
+        description: Helper text describing the custom field.
         value: The value entered for this custom field.
     """
 
     id: int
     column: str | None = None
+    name: str | None = None
+    description: str | None = None
     value: str | None = None
 
     @classmethod
     def from_dict(cls, d: dict) -> CustomFieldValue:
         """Construct a CustomFieldValue from a raw API response dict."""
-        return cls(id=d["Id"], column=d.get("Column"), value=d.get("Value"))
+        return cls(
+            id=d["Id"],
+            column=d.get("Column"),
+            name=d.get("Name"),
+            description=d.get("Description"),
+            value=d.get("Value"),
+        )
 
     def to_dict(self) -> dict:
         return {"Id": self.id, "Value": self.value}

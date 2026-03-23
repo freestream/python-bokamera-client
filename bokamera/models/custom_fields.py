@@ -39,33 +39,53 @@ class CustomFieldResponse:
 
     Attributes:
         id: Custom field ID.
+        company_id: UUID of the company that owns this custom field.
+        group_id: Group ID used to cluster related custom fields.
+        field_id: Slot field ID within the entity table.
         name: Label displayed to the user.
+        width: Display width of the field.
+        column: Internal database column name used to store values.
         description: Helper text displayed beneath the field.
         datatype: Data type of the field (e.g. ``"TextInput"``, ``"Checkbox"``).
         default_value: Pre-filled value shown to the user.
         is_mandatory: Whether the field must be filled in before booking.
+        mandatory_error_message: Error message shown when a mandatory field is left empty.
         max_length: Maximum allowed character length for text fields.
+        multiple_line_text: Whether the text field allows multiple lines.
+        reg_ex: Regex pattern used to validate the field value.
+        reg_ex_id: ID of the validation rule applied to this field.
+        reg_ex_error_message: Error message shown when the regex validation fails.
         is_public: Whether the field is visible to customers (as opposed to admins only).
         is_hidden: Whether the field is hidden from the booking form entirely.
         sort_order: Display order relative to other custom fields.
+        table: Entity table this custom field belongs to (e.g. ``"Booking"``).
         active: Whether this custom field is currently active.
-        mandatory_error_message: Error message shown when a mandatory field is left empty.
         values: Predefined selectable values (for dropdown / checkbox fields).
         services: Services this custom field is connected to.
     """
 
     id: int | None = None
+    company_id: UUID | None = None
+    group_id: int | None = None
+    field_id: int | None = None
     name: str | None = None
+    width: int | None = None
+    column: str | None = None
     description: str | None = None
     datatype: str | None = None
     default_value: str | None = None
     is_mandatory: bool = False
+    mandatory_error_message: str | None = None
     max_length: int | None = None
+    multiple_line_text: bool | None = None
+    reg_ex: str | None = None
+    reg_ex_id: int | None = None
+    reg_ex_error_message: str | None = None
     is_public: bool = True
     is_hidden: bool = False
     sort_order: int | None = None
+    table: str | None = None
     active: bool = True
-    mandatory_error_message: str | None = None
     values: list[dict] = field(default_factory=list)
     services: list[dict] = field(default_factory=list)
 
@@ -74,17 +94,27 @@ class CustomFieldResponse:
         """Construct a CustomFieldResponse from a raw API response dict."""
         return cls(
             id=d.get("Id"),
+            company_id=_uuid(d.get("CompanyId")),
+            group_id=d.get("GroupId"),
+            field_id=d.get("FieldId"),
             name=d.get("Name"),
+            width=d.get("Width"),
+            column=d.get("Column"),
             description=d.get("Description"),
-            datatype=d.get("Datatype"),
+            datatype=d.get("DataType") or d.get("Datatype"),
             default_value=d.get("DefaultValue"),
             is_mandatory=d.get("IsMandatory", False),
+            mandatory_error_message=d.get("MandatoryErrorMessage"),
             max_length=d.get("MaxLength"),
+            multiple_line_text=d.get("MultipleLineText"),
+            reg_ex=d.get("RegEx"),
+            reg_ex_id=d.get("RegExId"),
+            reg_ex_error_message=d.get("RegExErrorMessage"),
             is_public=d.get("IsPublic", True),
             is_hidden=d.get("IsHidden", False),
             sort_order=d.get("SortOrder"),
+            table=d.get("Table"),
             active=d.get("Active", True),
-            mandatory_error_message=d.get("MandatoryErrorMessage"),
             values=d.get("Values", []),
             services=d.get("Services", []),
         )

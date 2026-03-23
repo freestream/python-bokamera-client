@@ -88,6 +88,7 @@ class ServiceResource:
             "Quantities": quantities,
         }
         data = self._http.get("/services", params)
+
         if isinstance(data, list):
             return [ServiceResponse.from_dict(d) for d in data]
         return [ServiceResponse.from_dict(d) for d in data.get("Results", [])]

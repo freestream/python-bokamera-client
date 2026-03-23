@@ -12,6 +12,7 @@ from datetime import date, datetime, time
 from uuid import UUID
 
 from .common import CustomFieldValue, _date, _dt, _uuid
+from .custom_fields import CustomFieldResponse
 
 
 @dataclass(slots=True)
@@ -123,7 +124,8 @@ class ServiceResponse:
     resource_types: list[dict] = field(default_factory=list)
     prices: list[ServicePriceResponse] = field(default_factory=list)
     schedules: list[dict] = field(default_factory=list)
-    custom_fields: list[CustomFieldValue] = field(default_factory=list)
+    custom_fields: list[CustomFieldResponse] = field(default_factory=list)
+    custom_field_values: list[CustomFieldValue] = field(default_factory=list)
     rating_score: dict | None = None
 
     @classmethod
@@ -144,7 +146,8 @@ class ServiceResponse:
             resource_types=d.get("ResourceTypes", []),
             prices=[ServicePriceResponse.from_dict(p) for p in d.get("Prices", [])],
             schedules=d.get("Schedules", []),
-            custom_fields=[CustomFieldValue.from_dict(c) for c in d.get("CustomFields", [])],
+            custom_fields=[CustomFieldResponse.from_dict(c) for c in d.get("CustomFields", [])],
+            custom_field_values=[CustomFieldValue.from_dict(c) for c in d.get("CustomFieldValues", [])],
             rating_score=d.get("RatingScore"),
         )
 
